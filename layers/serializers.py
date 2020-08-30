@@ -7,8 +7,12 @@ class PolygonLayerSerializer(GeoFeatureModelSerializer):
         model = PolygonLayer
         geo_field = "shpolygon"
 
+        fields = '__all__'
+
 
 class PointLayerSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = PointLayer
         geo_field = "shpoint"
+
+        fields = '__all__'

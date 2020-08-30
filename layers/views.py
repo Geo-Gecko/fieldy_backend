@@ -10,6 +10,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny
 )
+from rest_framework.response import Response
 
 from .serializers import PointLayerSerializer, PolygonLayerSerializer
 
@@ -21,7 +22,8 @@ class CreateLayer(generics.CreateAPIView):
     # authentication_classes = (JWTAuthentication,)
 
     def create(self, request):
-        serializer_data = request.data.get('layer', {})
+        serializer_data = request.data
+        print(serializer_data)
 
         serializer = self.serializer_class(data=serializer_data)
 
