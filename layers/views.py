@@ -15,10 +15,10 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 import jwt
 
+from .models import PolygonLayer, PointLayer
 from .serializers import PointLayerSerializer, PolygonLayerSerializer
 
 def verify_auth_token(request):
-    # import pdb; pdb.set_trace()
     token = request.headers["Authorization"]
     token = token.split(" ")[1]
     if token:
@@ -30,11 +30,21 @@ def verify_auth_token(request):
     return False
 
 
-class CreateLayer(generics.CreateAPIView):
+class ListCreateLayers(generics.ListCreateAPIView):
     """Class for creation of an article"""
 
+    queryset = None
     serializer_class = None
     permission_classes = (AllowAny,)
+
+    def list(self, request):
+        # Note the use of `get_queryset()` instead of `self.queryset`
+        user_data = verify_auth_token(request)
+        if user_data != {}:
+            return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
         serializer_data = verify_auth_token(request)
@@ -48,11 +58,13 @@ class CreateLayer(generics.CreateAPIView):
 
         return Response({"layer": serializer.data}, status=status.HTTP_201_CREATED)
 
-class CreatePointLayer(CreateLayer):
+class ListCreatePointLayer(ListCreateLayers):
 
     serializer_class = PointLayerSerializer
+    queryset = PointLayer.objects.all()
 
 
-class CreatePolygonLayer(CreateLayer):
+class ListCreatePolygonLayer(ListCreateLayers):
 
     serializer_class = PolygonLayerSerializer
+    queryset = PolygonLayer.objects.all()

@@ -1,10 +1,12 @@
 from django.urls import include, path
 from rest_framework import routers
-from layers.views import CreatePointLayer, CreatePolygonLayer
+from layers.views import (
+    ListCreatePointLayer, ListCreatePolygonLayer
+)
 
 urlpatterns = [
-    path('createpointlayer/', CreatePointLayer.as_view()),
-    path('createpolygonlayer/', CreatePolygonLayer.as_view()),
+    path('listcreatepointlayer/', ListCreatePointLayer.as_view()),
+    path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
 ]
 
 

@@ -35,5 +35,4 @@ RUN pip install -r /app/requirements.txt
 # RUN python manage.py migrate
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
-ENTRYPOINT python manage.py migrate
 CMD gunicorn -b 0.0.0.0:$PORT sh_backend.wsgi
