@@ -15,8 +15,10 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 import jwt
 
-from .models import PolygonLayer, PointLayer
-from .serializers import PointLayerSerializer, PolygonLayerSerializer
+from .models import PolygonLayer, PointLayer, ShUserDetail
+from .serializers import (
+    PointLayerSerializer, PolygonLayerSerializer, ShUserDetailSerializer
+)
 
 def verify_auth_token(request):
     token = request.headers.get("Authorization")
@@ -105,3 +107,67 @@ class RetrieveUpdateDestroyPolygonLayer(
             {"message": "Layer has been deleted"},
             status=status.HTTP_204_NO_CONTENT
         )
+
+class RetrieveCreateUpdateUserDetail(
+    generics.CreateAPIView,
+    generics.RetrieveAPIView,
+    generics.UpdateAPIView,
+):
+
+    serializer_class = ShUserDetailSerializer
+    permission_classes = (AllowAny,)
+
+    def create(self, request, uu_id):
+        serializer_data = verify_auth_token(request)
+        if not serializer_data:
+            return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
+        user_ = jwt.decode(
+            request.headers.get("Authorization").split(" ")[1],
+            os.environ.get("SECRET_KEY", ""), algorithms="HS256"
+        )
+
+        serializer_data['properties']['user_id'] = user_['uid']
+        serializer = self.serializer_class(data=serializer_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request, uu_id):
+        user_data = verify_auth_token(request)
+        if user_data != {}:
+            return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
+        user_ = jwt.decode(
+            request.headers.get("Authorization").split(" ")[1],
+            os.environ.get("SECRET_KEY", ""), algorithms="HS256"
+        )
+        user_ = get_object_or_404(ShUserDetail, user_id=user_['uid'])
+        serializer = self.serializer_class(user_)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, uu_id):
+        serializer_data = verify_auth_token(request)
+        if not serializer_data:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        user_ = jwt.decode(
+            request.headers.get("Authorization").split(" ")[1],
+            os.environ.get("SECRET_KEY"), algorithms="HS256"
+        )
+        serializer_data['properties']['user_id'] = user_['uid']
+        try:
+            user_obj = ShUserDetail.objects.get(user_id=user_['uid'])
+            serializer = self.serializer_class(user_obj, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except ShUserDetail.DoesNotExist:
+            serializer_data['properties']['user_id'] = user_['uid']
+            serializer = self.serializer_class(data=serializer_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
