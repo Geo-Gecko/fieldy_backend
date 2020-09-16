@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import HStoreField
 
 class PolygonLayer(models.Model):
     field_id = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True
+        editable=True, unique=True
     )
     field_attributes = HStoreField(blank=True, default=dict)
     user_id = models.CharField(max_length=30, blank=False)
@@ -19,7 +19,7 @@ class PolygonLayer(models.Model):
 
 class PointLayer(models.Model):
     field_id = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True
+        editable=True, unique=True
     )
     field_attributes = HStoreField(blank=True, default=dict)
     user_id = models.CharField(max_length=30, blank=False)
