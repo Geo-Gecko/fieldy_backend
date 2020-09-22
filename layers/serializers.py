@@ -1,7 +1,7 @@
-from rest_framework_gis import serializers
+from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from .models import PointLayer, PolygonLayer, ShUserDetail
+from .models import PointLayer, PolygonLayer, ShUserDetail, FieldNdvi
 
 class PolygonLayerSerializer(GeoFeatureModelSerializer):
     class Meta:
@@ -23,6 +23,14 @@ class ShUserDetailSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = ShUserDetail
         geo_field = "center"
+
+        fields = '__all__'
+
+
+class FieldNdviSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FieldNdvi
 
         fields = '__all__'
    
