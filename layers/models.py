@@ -2,6 +2,13 @@ import uuid
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.validators import KeysValidator
+
+MONTHS_ = (
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'
+)
+
 
 class PolygonLayer(models.Model):
     field_id = models.UUIDField(
@@ -15,7 +22,7 @@ class PolygonLayer(models.Model):
 
     # Returns the string representation of the model.
     def __str__(self):
-        return self.field_id
+        return str(self.field_id)
 
 class PointLayer(models.Model):
     field_id = models.UUIDField(
@@ -26,7 +33,7 @@ class PointLayer(models.Model):
     shpoint = models.PointField(blank=True)
 
     def __str__(self):
-        return self.field_id
+        return str(self.field_id)
 
 class ShUserDetail(models.Model):
     user_id = models.CharField(max_length=30, blank=False)
@@ -35,3 +42,17 @@ class ShUserDetail(models.Model):
 
     def __str__(self):
         return self.user_id
+
+class FieldNdvi(models.Model):
+    field_id = models.UUIDField(
+        editable=True, unique=True
+    )
+    user_id = models.CharField(max_length=30, blank=False)
+    year = models.IntegerField(blank=True)
+    field_ndvi = HStoreField(
+        validators=[KeysValidator(keys=MONTHS_, strict=True)],
+        default=dict
+    )
+
+    def __str__(self):
+        return str(self.field_id)

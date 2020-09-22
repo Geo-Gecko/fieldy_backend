@@ -5,7 +5,8 @@ from rest_framework import (
     exceptions,
     generics,
     status,
-    serializers
+    serializers,
+    viewsets
 )
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
@@ -15,9 +16,10 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 import jwt
 
-from .models import PolygonLayer, PointLayer, ShUserDetail
+from .models import PolygonLayer, PointLayer, ShUserDetail, FieldNdvi
 from .serializers import (
-    PointLayerSerializer, PolygonLayerSerializer, ShUserDetailSerializer
+    PointLayerSerializer, PolygonLayerSerializer,
+    ShUserDetailSerializer, FieldNdviSerializer
 )
 
 def verify_auth_token(request):
@@ -149,6 +151,77 @@ class RetrieveCreateUpdateUserDetail(
             serializer.save()
         except ShUserDetail.DoesNotExist:
             serializer_data['properties']['user_id'] = user_id
+            serializer = self.serializer_class(data=serializer_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FieldNdviViewSet(viewsets.ViewSet):
+
+    serializer_class = FieldNdviSerializer
+    lookup_field = 'field_id'
+    permission_classes = (AllowAny,)
+
+    def list(self, request):
+        user_data, user_id = verify_auth_token(request)
+        if user_data != {}:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        queryset = FieldNdvi.objects.filter(user_id=user_id)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request, field_id=None):
+        serializer_data, user_id = verify_auth_token(request)
+        if not serializer_data:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer_data['user_id'] = user_id
+        serializer = self.serializer_class(data=serializer_data)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, field_id=None):
+        user_data, user_id = verify_auth_token(request)
+        if user_data != {}:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        field_ndvi_obj = get_object_or_404(
+            FieldNdvi, user_id=user_id, field_id=field_id
+        )
+        serializer = self.serializer_class(field_ndvi_obj)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, field_id=None):
+        serializer_data, user_id = verify_auth_token(request)
+        if not serializer_data:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # check this line in the previous view
+        serializer_data['user_id'] = user_id
+        try:
+            field_ndvi_obj = FieldNdvi.objects.get(
+                user_id=user_id, field_id=field_id
+            )
+            serializer = self.serializer_class(field_ndvi_obj, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        except FieldNdvi.DoesNotExist:
+            serializer_data['user_id'] = user_id
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
