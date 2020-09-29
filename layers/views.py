@@ -31,6 +31,8 @@ def verify_auth_token(request):
             return request.data, user_['uid']
         except jwt.exceptions.InvalidSignatureError:
             return False, ""
+        except jwt.exceptions.DecodeError:
+            return False, ""
     return False, ""
 
 
