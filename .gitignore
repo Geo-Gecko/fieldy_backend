@@ -9,3 +9,5 @@ venv/
 
 .env
 app.yaml
+
+.coverage

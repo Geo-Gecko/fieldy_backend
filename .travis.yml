@@ -1,0 +1,54 @@
+dist: bionic
+
+language: python
+python:
+    - "3.7"
+
+services:
+    - docker
+
+addons:
+  postgresql: 9.6
+  apt:
+    packages:
+    - postgresql-9.6-postgis-2.4
+
+before_install:
+    - sudo add-apt-repository -y ppa:ubuntugis/ppa
+    - sudo apt-get --quiet update
+    - sudo apt-get install -y libgdal-dev gdal-bin
+
+install:
+    - echo "Using gdal $(gdal-config --version)"
+    - pip install GDAL==$(gdal-config --version)
+    - pip install psycopg2-binary
+    - pip install -r requirements.txt
+
+
+before_script:
+    - psql -c "CREATE DATABASE sh_db;" -U postgres
+    - psql -U postgres -c "CREATE EXTENSION POSTGIS"
+    - python manage.py makemigrations layers
+    - python manage.py migrate
+
+script:
+  - coverage run --source=layers/ manage.py test
+
+
+after_success:
+#   - coveralls
+    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && echo $DOCKER_USERNAME | docker login -u $DOCKER_USERNAME --password-stdin   #login to dockerhub
+    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && curl https://cli-assets.heroku.com/install.sh | sh  #install heroku
+    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com  #login to registry.heroku.com 
+    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && docker build -t geck0baron/shbackend .
+    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && docker tag geck0baron/shbackend registry.heroku.com/$HEROKU_APP/web
+
+
+deploy:   
+    provider: script
+    script:
+            docker push geck0baron/shbackend;
+            docker push registry.heroku.com/$HEROKU_APP/web;
+            heroku container:release web --app $HEROKU_APP
+    on:
+        branch: main
