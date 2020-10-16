@@ -37,7 +37,6 @@ script:
 
 after_success:
 #   - coveralls
-    - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && echo $DOCKER_USERNAME | docker login -u $DOCKER_USERNAME --password-stdin   #login to dockerhub
     - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && curl https://cli-assets.heroku.com/install.sh | sh  #install heroku
     - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com  #login to registry.heroku.com 
     - test $TRAVIS_BRANCH = "main" && test $TRAVIS_PULL_REQUEST = "false" && docker build -t geck0baron/shbackend .
@@ -47,7 +46,7 @@ after_success:
 deploy:   
     provider: script
     script:
-            docker push geck0baron/shbackend;
+            # wonder whether I can use heroku container:push web --app $HEROKU_APP below
             docker push registry.heroku.com/$HEROKU_APP/web;
             heroku container:release web --app $HEROKU_APP
     on:

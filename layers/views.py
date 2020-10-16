@@ -28,12 +28,15 @@ def verify_auth_token(request):
         token = token.split(" ")[1]
         try:
             user_ = jwt.decode(token, os.environ.get("SECRET_KEY", ""), algorithms="HS256")
-            return request.data, user_['uid']
+            try:
+                return request.data, user_['uid'], user_['memberOf']
+            except KeyError:
+                return request.data, user_['uid']
         except jwt.exceptions.InvalidSignatureError:
-            return False, ""
+            return False, "", ""
         except jwt.exceptions.DecodeError:
-            return False, ""
-    return False, ""
+            return False, "", ""
+    return False, "", ""
 
 
 class ListCreatePolygonLayer(generics.ListCreateAPIView):
@@ -44,15 +47,19 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
 
     def list(self, request):
         # Note the use of `get_queryset()` instead of `self.queryset`
-        user_data, user_id = verify_auth_token(request)
+        user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
+
+        if user_member != "":
+            user_id = user_member
+
         queryset = PolygonLayer.objects.filter(user_id=user_id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -74,7 +81,7 @@ class RetrieveUpdateDestroyPolygonLayer(
     permission_classes = (AllowAny,)
 
     def put(self, request, field_id):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -90,7 +97,7 @@ class RetrieveUpdateDestroyPolygonLayer(
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, field_id):
-        user_data, user_id = verify_auth_token(request)
+        user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -116,7 +123,7 @@ class RetrieveCreateUpdateUserDetail(
     permission_classes = (AllowAny,)
 
     def create(self, request, uu_id):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -129,7 +136,7 @@ class RetrieveCreateUpdateUserDetail(
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, uu_id):
-        user_data, user_id = verify_auth_token(request)
+        user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -139,7 +146,7 @@ class RetrieveCreateUpdateUserDetail(
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, uu_id):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -166,7 +173,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
     permission_classes = (AllowAny,)
 
     def list(self, request):
-        user_data, user_id = verify_auth_token(request)
+        user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -177,7 +184,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, field_id=None):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -193,7 +200,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, field_id=None):
-        user_data, user_id = verify_auth_token(request)
+        user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
@@ -207,7 +214,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, field_id=None):
-        serializer_data, user_id = verify_auth_token(request)
+        serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data:
             return Response(
                 {"Error": "Unauthorized request"},
