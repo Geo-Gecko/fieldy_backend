@@ -16,10 +16,10 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 import jwt
 
-from .models import PolygonLayer, PointLayer, ShUserDetail, FieldNdvi
+from .models import PolygonLayer, PointLayer, ShUserDetail, FieldIndicators
 from .serializers import (
     PointLayerSerializer, PolygonLayerSerializer,
-    ShUserDetailSerializer, FieldNdviSerializer
+    ShUserDetailSerializer, FieldIndicatorsSerializer
 )
 
 def verify_auth_token(request):
@@ -166,9 +166,9 @@ class RetrieveCreateUpdateUserDetail(
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class FieldNdviViewSet(viewsets.ViewSet):
+class FieldIndicatorsViewSet(viewsets.ViewSet):
 
-    serializer_class = FieldNdviSerializer
+    serializer_class = FieldIndicatorsSerializer
     lookup_field = 'field_id'
     permission_classes = (AllowAny,)
 
@@ -179,7 +179,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        queryset = FieldNdvi.objects.filter(user_id=user_id)
+        queryset = FieldIndicators.objects.filter(user_id=user_id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -207,7 +207,7 @@ class FieldNdviViewSet(viewsets.ViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         field_ndvi_obj = get_object_or_404(
-            FieldNdvi, user_id=user_id, field_id=field_id
+            FieldIndicators, user_id=user_id, field_id=field_id
         )
         serializer = self.serializer_class(field_ndvi_obj)
 
@@ -223,13 +223,13 @@ class FieldNdviViewSet(viewsets.ViewSet):
         # check this line in the previous view
         serializer_data['user_id'] = user_id
         try:
-            field_ndvi_obj = FieldNdvi.objects.get(
+            field_ndvi_obj = FieldIndicators.objects.get(
                 user_id=user_id, field_id=field_id
             )
             serializer = self.serializer_class(field_ndvi_obj, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        except FieldNdvi.DoesNotExist:
+        except FieldIndicators.DoesNotExist:
             serializer_data['user_id'] = user_id
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)

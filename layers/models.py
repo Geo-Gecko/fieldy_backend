@@ -43,13 +43,26 @@ class ShUserDetail(models.Model):
     def __str__(self):
         return self.user_id
 
-class FieldNdvi(models.Model):
+class FieldIndicators(models.Model):
     field_id = models.UUIDField(
         editable=True, unique=True
     )
     user_id = models.CharField(max_length=30, blank=False)
     year = models.IntegerField(blank=True)
     field_ndvi = HStoreField(
+        validators=[KeysValidator(keys=MONTHS_, strict=True)],
+        default=dict
+    )
+    # these values are collected for a whole area are they not???
+    field_ndwi = HStoreField(
+        validators=[KeysValidator(keys=MONTHS_, strict=True)],
+        default=dict
+    )
+    field_rainfall = HStoreField(
+        validators=[KeysValidator(keys=MONTHS_, strict=True)],
+        default=dict
+    )
+    field_temperature = HStoreField(
         validators=[KeysValidator(keys=MONTHS_, strict=True)],
         default=dict
     )

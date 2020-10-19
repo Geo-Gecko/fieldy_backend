@@ -1,9 +1,9 @@
 
-from .models import PolygonLayer, FieldNdvi
+from .models import PolygonLayer, FieldIndicators
 
 
 def delete_after_polygon(sender, instance, **kwargs):
     try:
-        FieldNdvi.objects.get(field_id=instance.field_id).delete()
-    except FieldNdvi.DoesNotExist:
+        FieldIndicators.objects.get(field_id=instance.field_id).delete()
+    except FieldIndicators.DoesNotExist:
         pass
