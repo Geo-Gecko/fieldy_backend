@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
-from .models import PointLayer, PolygonLayer, ShUserDetail, FieldNdvi
+from .models import PointLayer, PolygonLayer, ShUserDetail, FieldIndicators
 
 class PolygonLayerSerializer(GeoFeatureModelSerializer):
     class Meta:
@@ -27,10 +27,9 @@ class ShUserDetailSerializer(GeoFeatureModelSerializer):
         fields = '__all__'
 
 
-class FieldNdviSerializer(serializers.ModelSerializer):
+class FieldIndicatorsSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = FieldNdvi
+        model = FieldIndicators
 
         fields = '__all__'
-   

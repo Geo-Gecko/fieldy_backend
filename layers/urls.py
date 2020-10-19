@@ -2,11 +2,11 @@ from django.urls import include, path, re_path
 from rest_framework.routers import DefaultRouter
 from layers.views import (
     ListCreatePolygonLayer, RetrieveUpdateDestroyPolygonLayer,
-    RetrieveCreateUpdateUserDetail, FieldNdviViewSet
+    RetrieveCreateUpdateUserDetail, FieldIndicatorsViewSet
 )
 
 router = DefaultRouter()
-router.register('fieldndvi', FieldNdviViewSet, basename="fieldndvi")
+router.register('fieldindicators', FieldIndicatorsViewSet, basename="fieldindicators")
 
 urlpatterns = [
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
