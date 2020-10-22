@@ -179,6 +179,10 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        if user_member != "":
+            user_id = user_member
+
         queryset = FieldIndicators.objects.filter(user_id=user_id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -206,6 +210,11 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+
+        if user_member != "":
+            user_id = user_member
+
         field_ndvi_obj = get_object_or_404(
             FieldIndicators, user_id=user_id, field_id=field_id
         )
