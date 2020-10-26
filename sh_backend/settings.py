@@ -81,7 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sh_backend.wsgi.application'
 
-CORS_ALLOWED_ORIGINS = [os.environ.get('SH_FRONTEND', 'http://localhost:3001')]
+CORS_ALLOWED_ORIGINS = os.environ.get('SH_FRONTEND', 'http://localhost:3001').split(',')
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
