@@ -45,7 +45,7 @@ class ShUserDetail(models.Model):
 
 class FieldIndicators(models.Model):
     field_id = models.UUIDField(
-        editable=True, unique=True
+        editable=True, unique=False
     )
     user_id = models.CharField(max_length=30, blank=False)
     year = models.IntegerField(blank=True)

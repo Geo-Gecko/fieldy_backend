@@ -60,7 +60,7 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
 
     def create(self, request):
         serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data:
+        if not serializer_data or user_member != "":
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer_data['properties']['user_id'] = user_id
@@ -98,7 +98,7 @@ class RetrieveUpdateDestroyPolygonLayer(
 
     def delete(self, request, field_id):
         user_data, user_id, user_member = verify_auth_token(request)
-        if user_data != {}:
+        if user_data != {} or user_member != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
@@ -189,7 +189,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
 
     def create(self, request, field_id=None):
         serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data:
+        if not serializer_data or user_member != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
@@ -211,7 +211,6 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-
         if user_member != "":
             user_id = user_member
 
@@ -224,7 +223,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
 
     def put(self, request, field_id=None):
         serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data:
+        if not serializer_data or user_member != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
