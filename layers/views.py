@@ -215,7 +215,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
             user_id = user_member
 
         field_ndvi_obj = get_object_or_404(
-            FieldIndicators, user_id=user_id, field_id=field_id
+            FieldIndicators, user_id=user_id, field_id=field_id, year=2019
         )
         serializer = self.serializer_class(field_ndvi_obj)
 

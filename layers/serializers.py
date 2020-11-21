@@ -32,4 +32,4 @@ class FieldIndicatorsSerializer(serializers.ModelSerializer):
     class Meta:
         model = FieldIndicators
 
-        fields = '__all__'
+        fields = ('field_id','user_id','year','field_ndvi','field_ndwi','field_rainfall','field_temperature')
