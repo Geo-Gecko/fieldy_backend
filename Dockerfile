@@ -32,6 +32,7 @@ RUN pip install gunicorn
 # ADD requirements_copy.txt /app/requirements_copy.txt
 RUN pip install -r /app/requirements.txt
 
+ENV DEBUG_VALUE=False
 # RUN python manage.py migrate
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
