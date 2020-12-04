@@ -40,7 +40,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         queryset = FieldIndicators.objects.filter(user_id=user_id)
         serializer = self.serializer_class(queryset, many=True)
         # import json;
-        # with open('moringa_connect_2019.json', 'w') as fa_:
+        # with open('moringa_2019_2020.json', 'w') as fa_:
         #     json.dump(serializer.data, fa_)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -72,7 +72,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
             user_id = user_member
 
         field_ndvi_obj = get_object_or_404(
-            FieldIndicators, user_id=user_id, field_id=field_id, year=2019
+            FieldIndicators, user_id=user_id, field_id=field_id
         )
         serializer = self.serializer_class(field_ndvi_obj)
 
