@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register('fieldindicators', FieldIndicatorsViewSet, basename="fieldindicators")
 
 urlpatterns = [
-    path('contact/', contact_us),
+    # path('contact/', contact_us),
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
     path(
         'getupdatedeletelayer/<str:field_id>/',
