@@ -27,6 +27,18 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
     permission_classes = (AllowAny,)
 
     def list(self, request):
+        """
+        To list all the indicators for all fields
+        ---
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+            - code: 200
+              message: OK
+
+        produces:
+            - application/json
+        """
         user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response(
@@ -61,6 +73,18 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, field_id=None):
+        """
+        To list all the indicators for a particular field
+        ---
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+            - code: 200
+              message: OK
+
+        produces:
+            - application/json
+        """
         user_data, user_id, user_member = verify_auth_token(request)
         if user_data != {}:
             return Response(

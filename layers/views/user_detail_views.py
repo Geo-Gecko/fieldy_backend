@@ -24,6 +24,7 @@ class RetrieveCreateUpdateUserDetail(
 
     serializer_class = ShUserDetailSerializer
     permission_classes = (AllowAny,)
+    schema = None
 
     def create(self, request, uu_id):
         serializer_data, user_id, user_member = verify_auth_token(request)

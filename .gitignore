@@ -11,3 +11,4 @@ venv/
 app.yaml
 
 .coverage
+**/static_root/

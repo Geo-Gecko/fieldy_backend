@@ -22,6 +22,29 @@ client = Client(transport=transport)
 
 @api_view(['POST'])
 def get_auth_token(request):
+    """
+    To get a token for authenticated use of field indicatos
+    ---
+    parameters_strategy: merge
+    parameters:
+        - name: username
+          required: true
+          type: string
+          paramType: form
+        - name: password
+          required: true
+          type: string
+          paramType: form
+    responseMessages:
+        - code: 401
+            message: Not authenticated
+        - code: 201
+            message: Created
+
+    produces:
+        - application/json
+        - application/xml
+    """
 
     query = gql(
         """
