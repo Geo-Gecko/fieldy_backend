@@ -95,3 +95,48 @@ df_2019.to_csv('')
 #         // this.props.postPolygonLayer(feature)
 #       }
 #     })
+
+"""UPDATING INDICATOR DATA"""
+
+#     // console.log(count)
+#     axiosInstance({
+#       url: `/layers/fieldindicators/`,
+#       method: "GET",
+#       data: ""
+#   })
+#       .then(async response => {
+#         // console.log(response.data, fieldindicators)
+#         count = 0
+#         response.data.forEach((piece_, index) => {
+#           let updated_ft_data = fieldindicators.find(ft_data => {
+#             // ft_data.field_id = ft_data.field_id.replace("{", "")
+#             if (piece_.field_id === ft_data.field_id && ft_data.year === 2020) {
+#               return ft_data
+#             }
+#             return null
+#           })
+#           if (updated_ft_data){
+#             count ++;
+#             // WITHOUT STAGGERING____
+#           //   axiosInstance({
+#           //     url: `/layers/fieldindicators/${updated_ft_data.field_id}/`,
+#           //     method: "PUT",
+#           //     data: updated_ft_data
+#           // })
+#           //     .then(response => console.log(response.data))
+#           // WITH STAGGERING_______________________________________
+#             setTimeout(function(){
+#               // console.log(count)
+#           //   axiosInstance({
+#           //     url: `/layers/fieldindicators/${updated_ft_data.field_id}/`,
+#           //     method: "PUT",
+#           //     data: updated_ft_data
+#           // })
+#           //     .then(response => console.log(response.data))
+#             }, index * 250)
+#           }
+#         })
+#         console.log(count)
+    
+
+#         })
