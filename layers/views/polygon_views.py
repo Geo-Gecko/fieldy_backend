@@ -37,10 +37,11 @@ def verify_auth_token(request):
 
 
 class ListCreatePolygonLayer(generics.ListCreateAPIView):
-    """Class for creation of an article"""
+    """URL to list view and create polygons"""
 
     serializer_class = PolygonLayerSerializer
     permission_classes = (AllowAny,)
+    schema = None
 
     def list(self, request):
         # Note the use of `get_queryset()` instead of `self.queryset`
@@ -76,6 +77,7 @@ class RetrieveUpdateDestroyPolygonLayer(
     queryset = PolygonLayer.objects.all()
     serializer_class = PolygonLayerSerializer
     permission_classes = (AllowAny,)
+    schema = None
 
     def put(self, request, field_id):
         serializer_data, user_id, user_member = verify_auth_token(request)

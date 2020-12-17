@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'rest_framework',
     'rest_framework_gis',
-    'layers'
+    'layers',
+    'users',
+    'rest_framework_swagger',
 ]
 
 MIDDLEWARE = [
@@ -85,6 +87,11 @@ CORS_ALLOWED_ORIGINS = os.environ.get('SH_FRONTEND', 'http://localhost:3001').sp
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+REST_FRAMEWORK = {
+# 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+# 'PAGE_SIZE': 10,
+  'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+}
 
 GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
 GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
@@ -126,9 +133,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-
-import django_heroku
-django_heroku.settings(locals())
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'sh_backend', 'static')]
+VENV_PATH = os.path.dirname(BASE_DIR)
+STATIC_ROOT = os.path.join(VENV_PATH, 'sh_backend', 'static_root')
 
 
 DATABASES = {'default': dj_database_url.config(conn_max_age=600)}

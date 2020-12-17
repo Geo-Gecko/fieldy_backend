@@ -9,6 +9,8 @@ from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
 router = DefaultRouter()
 router.register('fieldindicators', FieldIndicatorsViewSet, basename="fieldindicators")
 
+app_name = 'layers'
+
 urlpatterns = [
     # path('contact/', contact_us),
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),

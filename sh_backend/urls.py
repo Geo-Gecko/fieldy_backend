@@ -15,9 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.conf.urls import include, url
+from django.views.generic import TemplateView
 from django.urls import path
 
+from rest_framework.schemas import get_schema_view
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Smallholder API')
+
 urlpatterns = [
+    url('^$', schema_view),
     path('admin/', admin.site.urls),
-    path('layers/', include('layers.urls')),
+    path('layers/', include('layers.urls', namespace='layers-urls')),
+    path('users/', include('users.urls')),
+    path('shapi/', get_schema_view(
+        title="Smallholder API",
+        description="API developers looking to use the API"
+    ), name='shapi-schema')
 ]
