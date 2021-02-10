@@ -14,6 +14,7 @@ from rest_framework.permissions import (
     AllowAny
 )
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 from layers.views.polygon_views import verify_auth_token
 
 from layers.models import FieldIndicators
@@ -56,6 +57,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         #     json.dump(serializer.data, fa_)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(auto_schema=None)
     def create(self, request, field_id=None):
         serializer_data, user_id, user_member = verify_auth_token(request)
         if not serializer_data or user_member != "":
