@@ -1,11 +1,41 @@
-
-import pandas as pd
-
+"""
+# import pandas as pd
 df = pd.read_csv('')
 df_2019 = df[~df.Year.isin([2020])]
+"""
+
 # check on 2020_exists
-df_me.iloc[1]
-df_2019.to_csv('')
+# TODO: updating indicator starts.
+# TODO: had to abandon this for hosted db. But works okay locally.
+# TODO: hosted db is slow. Is the issue with this.
+"""
+# import time
+# import json
+
+with open("jan_feb_data.json", "+r") as json_file:
+    json_file = json.loads(json_file.read())
+    unread_ = 0
+    initial_ = 0
+    for row_ in json_file:
+        # 6ec3f626-cd1a-4994-9177-3eb82a0beb0f
+        field_ndvi_obj = ArrayedFieldIndicators.objects.filter(
+            field_id=row_["field_id"], indicator=row_["indicator"]
+        )
+        if field_ndvi_obj:
+            row_["user_id"] = field_ndvi_obj.first().user_id
+            serializer = self.serializer_class(
+                field_ndvi_obj[0], data=row_
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            initial_ += 1
+            print(f"Added {initial_} fields")
+            # time.sleep(1)
+        else:
+            unread_ += 1
+            print(f"Skipped {unread_} fields")
+    print(f"done with all {initial_} fields")
+"""
 
 """js scripts"""
 """MORINGA CONNECT"""

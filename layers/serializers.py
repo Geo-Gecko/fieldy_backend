@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
-    PointLayer, PolygonLayer, ShUserDetail, ArrayedFieldIndicators
+    PointLayer, PolygonLayer, ShUserDetail, ArrayedFieldIndicators, GridLayer
 )
 
 class PolygonLayerSerializer(GeoFeatureModelSerializer):
@@ -19,6 +19,22 @@ class PointLayerSerializer(GeoFeatureModelSerializer):
         geo_field = "shpoint"
 
         fields = '__all__'
+
+class GridLayerSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = GridLayer
+        geo_field = "shpolygon"
+
+        fields = '__all__'
+
+
+class GetGridLayerSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = GridLayer
+        geo_field = "shpolygon"
+
+        fields = ("field_id", "count", "field_attributes", "shpolygon")
+
 
 class ShUserDetailSerializer(GeoFeatureModelSerializer):
 

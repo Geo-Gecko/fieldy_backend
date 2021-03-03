@@ -35,6 +35,20 @@ class PointLayer(models.Model):
     def __str__(self):
         return str(self.field_id)
 
+
+class GridLayer(models.Model):
+    # TODO: this should be layer_id
+    field_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    # field_id is to be used to update the fields
+    user_id = models.CharField(max_length=30, blank=False)
+    count = models.FloatField(null=True)
+    field_attributes = HStoreField(blank=True, default=dict)
+    shpolygon = models.PolygonField(blank=True, unique=True)
+
+    def __str__(self):
+        return str(self.field_id)
+
+
 class ShUserDetail(models.Model):
     user_id = models.CharField(max_length=30, blank=False)
     center = models.PointField(blank=True)
