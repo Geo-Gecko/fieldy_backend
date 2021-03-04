@@ -5,9 +5,45 @@ df_2019 = df[~df.Year.isin([2020])]
 """
 
 # check on 2020_exists
-# TODO: updating indicator starts.
-# TODO: had to abandon this for hosted db. But works okay locally.
-# TODO: hosted db is slow. Is the issue with this.
+# TODO: updating indicator starts. DONE ✔✔✔✔✔
+
+"""
+SCRIPT FOR SAVING GRIDS
+let gridFeatures = grid.toGeoJSON()
+gridFeatures.features.forEach(ft_ => {
+return axiosInstance
+    .post('/layers/gridlayers/', ft_)
+    .then(response => {
+        console.log("Layer saved", response)
+    })
+    .catch(error => {
+    console.log(error)
+    });
+})
+"""
+
+"""
+// SCRIPT TO SEND KATOR CALCNS
+Object.keys(storeData).forEach(kator => {
+    Object.keys(storeData[kator]).forEach(cropType => {
+    storeData[kator][cropType]["indicator"] = kator
+    storeData[kator][cropType]["crop_type"] = cropType
+        return axiosInstance
+            .post(
+            '/layers/indicatorcalculations/',
+            storeData[kator][cropType]
+            )
+            .then(response => {
+                console.log("Kator Calc saved", response)
+            })
+            .catch(error => {
+            console.log(error)
+            });
+    })
+})
+"""
+
+
 """
 # import time
 # import json

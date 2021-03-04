@@ -4,13 +4,18 @@ from layers.views.contact_views import contact_us
 from layers.views.polygon_views import (
     ListCreatePolygonLayer, ListCreateUpdateDestroyGridLayer
 )
-from layers.views.indicator_views import FieldIndicatorsViewSet
+from layers.views.indicator_views import (
+    FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet
+)
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
 
 router = DefaultRouter()
 router.register(
     "fieldindicators", FieldIndicatorsViewSet, basename="fieldindicators"
+)
+router.register(
+    "indicatorcalculations", FieldIndicatorCalculationsViewSet, basename="indicatorcalculations"
 )
 router.register(
     "gridlayers", ListCreateUpdateDestroyGridLayer, basename="gridlayers"

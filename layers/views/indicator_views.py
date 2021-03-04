@@ -17,8 +17,11 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from layers.views.polygon_views import verify_auth_token
 
-from layers.models import FieldIndicators, ArrayedFieldIndicators
-from layers.serializers import FieldIndicatorsSerializer
+from layers.models import FieldIndicatorCalculations, ArrayedFieldIndicators
+from layers.serializers import (
+    FieldIndicatorsSerializer, FieldIndicatorCalculationsSerializer,
+    GetFieldIndicatorCalculationsSerializer
+)
 
 
 class FieldIndicatorsViewSet(viewsets.ViewSet):
@@ -127,3 +130,69 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
             serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
+
+    serializer_class = FieldIndicatorCalculationsSerializer
+    lookup_field = 'indicator'
+    permission_classes = (AllowAny,)
+    schema = None
+
+    def list(self, request):
+        user_data, user_id, user_member = verify_auth_token(request)
+        if user_data != {}:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user_member != "":
+            user_id = user_member
+
+        queryset = FieldIndicatorCalculations.objects.filter(user_id=user_id)
+        serializer = GetFieldIndicatorCalculationsSerializer(
+            queryset, many=True
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # CREATE AND PUT TO BE EXCLUDED FROM DEPLOYED APP AS WELL
+    # def create(self, request, indicator=None):
+    #     serializer_data, user_id, user_member = verify_auth_token(request)
+    #     if not serializer_data or user_member != "":
+    #         return Response(
+    #             {"Error": "Unauthorized request"},
+    #             status=status.HTTP_403_FORBIDDEN
+    #         )
+
+    #     serializer_data['user_id'] = user_id
+    #     serializer = self.serializer_class(data=serializer_data)
+
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # def put(self, request, indicator=None):
+    #     serializer_data, user_id, user_member = verify_auth_token(request)
+    #     if not serializer_data or user_member != "":
+    #         return Response(
+    #             {"Error": "Unauthorized request"},
+    #             status=status.HTTP_403_FORBIDDEN
+    #         )
+    #     # check this line in the previous view
+    #     serializer_data['user_id'] = user_id
+    #     try:
+    #         field_ndvi_obj = FieldIndicatorCalculations.objects.get(
+    #             user_id=user_id, indicator=indicator
+    #         )
+    #         serializer = self.serializer_class(field_ndvi_obj, data=request.data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #     except FieldIndicatorCalculations.DoesNotExist:
+    #         serializer_data['user_id'] = user_id
+    #         serializer = self.serializer_class(data=serializer_data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
