@@ -1,11 +1,77 @@
-
-import pandas as pd
-
+"""
+# import pandas as pd
 df = pd.read_csv('')
 df_2019 = df[~df.Year.isin([2020])]
+"""
+
 # check on 2020_exists
-df_me.iloc[1]
-df_2019.to_csv('')
+# TODO: updating indicator starts. DONE ✔✔✔✔✔
+
+"""
+SCRIPT FOR SAVING GRIDS
+let gridFeatures = grid.toGeoJSON()
+gridFeatures.features.forEach(ft_ => {
+return axiosInstance
+    .post('/layers/gridlayers/', ft_)
+    .then(response => {
+        console.log("Layer saved", response)
+    })
+    .catch(error => {
+    console.log(error)
+    });
+})
+"""
+
+"""
+// SCRIPT TO SEND KATOR CALCNS
+Object.keys(storeData).forEach(kator => {
+    Object.keys(storeData[kator]).forEach(cropType => {
+    storeData[kator][cropType]["indicator"] = kator
+    storeData[kator][cropType]["crop_type"] = cropType
+        return axiosInstance
+            .post(
+            '/layers/indicatorcalculations/',
+            storeData[kator][cropType]
+            )
+            .then(response => {
+                console.log("Kator Calc saved", response)
+            })
+            .catch(error => {
+            console.log(error)
+            });
+    })
+})
+"""
+
+
+"""
+# import time
+# import json
+
+with open("jan_feb_data.json", "+r") as json_file:
+    json_file = json.loads(json_file.read())
+    unread_ = 0
+    initial_ = 0
+    for row_ in json_file:
+        # 6ec3f626-cd1a-4994-9177-3eb82a0beb0f
+        field_ndvi_obj = ArrayedFieldIndicators.objects.filter(
+            field_id=row_["field_id"], indicator=row_["indicator"]
+        )
+        if field_ndvi_obj:
+            row_["user_id"] = field_ndvi_obj.first().user_id
+            serializer = self.serializer_class(
+                field_ndvi_obj[0], data=row_
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            initial_ += 1
+            print(f"Added {initial_} fields")
+            # time.sleep(1)
+        else:
+            unread_ += 1
+            print(f"Skipped {unread_} fields")
+    print(f"done with all {initial_} fields")
+"""
 
 """js scripts"""
 """MORINGA CONNECT"""
@@ -59,42 +125,17 @@ df_2019.to_csv('')
 # // this.props.postPolygonLayer(farmAfrica.features[0])
 
 
-"""As of 4th DEECEMBER"""
-    # // console.log(fields_)
-    # let count = 0
-    # fields_.features.forEach(feature => {
-    #   feature.properties.field_attributes = {}
-    #   feature.properties.user_id = ""
-    #   feature.properties.field_attributes.CropType = "Coffee"
-    #   let keys_ = Object.keys(feature.properties)
-    #   keys_.forEach(key => {
-    #     if (!["user_id", "field_attributes", "field_id"].includes(key)) {
-    #       if (feature.properties[key] === null) {
-    #         feature.properties[key] = ""
-    #       }
-    #       // croptype is below
-    #       if (key === "Select Value chain") {
-    #         // console.log("count")
-    #         feature.properties.field_attributes.CropType = feature.properties[key]
-    #         delete feature.properties[key]
-    #       } else {
-    #         feature.properties.field_attributes[key] =
-    #          feature.properties[key]
-    #         delete feature.properties[key]
-    #       }
-    #     }
+"""As of 10-March-2021"""
+    #   indicators_.forEach((feature_, index) => {
+    #     // setTimeout(() => {
+    #     //   this.props.dispatch(getcreateputGraphData(
+    #     //    feature_, 'POST', ""
+    #     //   ))
+    #     // }, 250 * index)
+    #       this.props.dispatch(getcreateputGraphData(
+    #         feature_, 'POST', ""
+    #        ))
     #   })
-    #   let already_there = leafletGeoJSON.features.find(ft_ => {
-    #     if (ft_.properties.field_id === feature.properties.field_id) {
-    #       return ft_
-    #     }
-    #     return null
-    #   })
-    #   if (!already_there){
-    #     count += 1
-    #     // this.props.postPolygonLayer(feature)
-    #   }
-    # })
 
 """UPDATING INDICATOR DATA"""
 

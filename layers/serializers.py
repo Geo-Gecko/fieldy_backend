@@ -2,7 +2,8 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
-    PointLayer, PolygonLayer, ShUserDetail, ArrayedFieldIndicators
+    PointLayer, PolygonLayer, ShUserDetail,
+    ArrayedFieldIndicators, GridLayer, FieldIndicatorCalculations
 )
 
 class PolygonLayerSerializer(GeoFeatureModelSerializer):
@@ -20,6 +21,22 @@ class PointLayerSerializer(GeoFeatureModelSerializer):
 
         fields = '__all__'
 
+class GridLayerSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = GridLayer
+        geo_field = "shpolygon"
+
+        fields = '__all__'
+
+
+class GetGridLayerSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = GridLayer
+        geo_field = "shpolygon"
+
+        fields = ("field_id", "count", "field_attributes", "shpolygon")
+
+
 class ShUserDetailSerializer(GeoFeatureModelSerializer):
 
     class Meta:
@@ -34,7 +51,28 @@ class FieldIndicatorsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArrayedFieldIndicators
 
+        fields = '__all__'
+
+class GetFieldIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ArrayedFieldIndicators
+
         fields = (
             'field_id','indicator', 'january', 'february', 'march', 'april', 'may',
             'june', 'july', 'august', 'september', 'october', 'november', 'december' 
         )
+
+class FieldIndicatorCalculationsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FieldIndicatorCalculations
+
+        fields = '__all__'
+
+class GetFieldIndicatorCalculationsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FieldIndicatorCalculations
+
+        exclude = ('user_id', 'id', )
