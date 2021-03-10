@@ -85,6 +85,15 @@ class FieldIndicators(models.Model):
         return str(self.field_id)
 
 class ArrayedFieldIndicators(models.Model):
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["field_id", "indicator"],
+                name="unique field indicators row"
+            )
+        ]
+
     field_id = models.UUIDField(
         editable=True, unique=False
     )

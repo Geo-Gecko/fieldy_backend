@@ -51,6 +51,13 @@ class FieldIndicatorsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArrayedFieldIndicators
 
+        fields = '__all__'
+
+class GetFieldIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ArrayedFieldIndicators
+
         fields = (
             'field_id','indicator', 'january', 'february', 'march', 'april', 'may',
             'june', 'july', 'august', 'september', 'october', 'november', 'december' 

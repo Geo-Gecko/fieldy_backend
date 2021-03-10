@@ -20,7 +20,8 @@ from layers.views.polygon_views import verify_auth_token
 from layers.models import FieldIndicatorCalculations, ArrayedFieldIndicators
 from layers.serializers import (
     FieldIndicatorsSerializer, FieldIndicatorCalculationsSerializer,
-    GetFieldIndicatorCalculationsSerializer
+    GetFieldIndicatorCalculationsSerializer,
+    GetFieldIndicatorsSerializer
 )
 
 
@@ -54,7 +55,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
             user_id = user_member
 
         queryset = ArrayedFieldIndicators.objects.filter(user_id=user_id)
-        serializer = self.serializer_class(queryset, many=True)
+        serializer = GetFieldIndicatorsSerializer(queryset, many=True)
         # import json;
         # with open('moringa_2019_2020.json', 'w') as fa_:
         #     json.dump(serializer.data, fa_)
@@ -103,7 +104,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         field_ndvi_obj = ArrayedFieldIndicators.objects.filter(
             user_id=user_id, field_id=field_id
         )
-        serializer = self.serializer_class(field_ndvi_obj, many=True)
+        serializer = GetFieldIndicatorsSerializer(field_ndvi_obj, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

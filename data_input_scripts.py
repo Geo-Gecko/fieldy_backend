@@ -125,42 +125,17 @@ with open("jan_feb_data.json", "+r") as json_file:
 # // this.props.postPolygonLayer(farmAfrica.features[0])
 
 
-"""As of 4th DEECEMBER"""
-    # // console.log(fields_)
-    # let count = 0
-    # fields_.features.forEach(feature => {
-    #   feature.properties.field_attributes = {}
-    #   feature.properties.user_id = ""
-    #   feature.properties.field_attributes.CropType = "Coffee"
-    #   let keys_ = Object.keys(feature.properties)
-    #   keys_.forEach(key => {
-    #     if (!["user_id", "field_attributes", "field_id"].includes(key)) {
-    #       if (feature.properties[key] === null) {
-    #         feature.properties[key] = ""
-    #       }
-    #       // croptype is below
-    #       if (key === "Select Value chain") {
-    #         // console.log("count")
-    #         feature.properties.field_attributes.CropType = feature.properties[key]
-    #         delete feature.properties[key]
-    #       } else {
-    #         feature.properties.field_attributes[key] =
-    #          feature.properties[key]
-    #         delete feature.properties[key]
-    #       }
-    #     }
+"""As of 10-March-2021"""
+    #   indicators_.forEach((feature_, index) => {
+    #     // setTimeout(() => {
+    #     //   this.props.dispatch(getcreateputGraphData(
+    #     //    feature_, 'POST', ""
+    #     //   ))
+    #     // }, 250 * index)
+    #       this.props.dispatch(getcreateputGraphData(
+    #         feature_, 'POST', ""
+    #        ))
     #   })
-    #   let already_there = leafletGeoJSON.features.find(ft_ => {
-    #     if (ft_.properties.field_id === feature.properties.field_id) {
-    #       return ft_
-    #     }
-    #     return null
-    #   })
-    #   if (!already_there){
-    #     count += 1
-    #     // this.props.postPolygonLayer(feature)
-    #   }
-    # })
 
 """UPDATING INDICATOR DATA"""
 
