@@ -69,3 +69,22 @@ class FieldIndicators(models.Model):
 
     def __str__(self):
         return str(self.field_id)
+
+class ArrayedFieldIndicators(models.Model):
+    field_id = models.UUIDField(
+        editable=True, unique=False
+    )
+    user_id = models.CharField(max_length=30, blank=False)
+    indicator = models.CharField(max_length=50, blank=False)
+    january = models.FloatField(null=True)
+    february = models.FloatField(null=True)
+    march = models.FloatField(null=True)
+    april = models.FloatField(null=True)
+    may = models.FloatField(null=True)
+    june = models.FloatField(null=True)
+    july = models.FloatField(null=True)
+    august = models.FloatField(null=True)
+    september = models.FloatField(null=True)
+    october = models.FloatField(null=True)
+    november = models.FloatField(null=True)
+    december = models.FloatField(null=True)

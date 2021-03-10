@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from layers.views.polygon_views import verify_auth_token
 
-from layers.models import FieldIndicators
+from layers.models import FieldIndicators, ArrayedFieldIndicators
 from layers.serializers import FieldIndicatorsSerializer
 
 
@@ -50,7 +50,7 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         if user_member != "":
             user_id = user_member
 
-        queryset = FieldIndicators.objects.filter(user_id=user_id)
+        queryset = ArrayedFieldIndicators.objects.filter(user_id=user_id)
         serializer = self.serializer_class(queryset, many=True)
         # import json;
         # with open('moringa_2019_2020.json', 'w') as fa_:
@@ -97,10 +97,10 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         if user_member != "":
             user_id = user_member
 
-        field_ndvi_obj = get_object_or_404(
-            FieldIndicators, user_id=user_id, field_id=field_id
+        field_ndvi_obj = ArrayedFieldIndicators.objects.filter(
+            user_id=user_id, field_id=field_id
         )
-        serializer = self.serializer_class(field_ndvi_obj)
+        serializer = self.serializer_class(field_ndvi_obj, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -114,13 +114,13 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         # check this line in the previous view
         serializer_data['user_id'] = user_id
         try:
-            field_ndvi_obj = FieldIndicators.objects.get(
+            field_ndvi_obj = ArrayedFieldIndicators.objects.get(
                 user_id=user_id, field_id=field_id
             )
             serializer = self.serializer_class(field_ndvi_obj, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-        except FieldIndicators.DoesNotExist:
+        except ArrayedFieldIndicators.DoesNotExist:
             serializer_data['user_id'] = user_id
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)
