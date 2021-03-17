@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
-    PointLayer, PolygonLayer, ShUserDetail,
+    PointLayer, PolygonLayer, ShUserDetail, ForeCastIndicators,
     ArrayedFieldIndicators, GridLayer, FieldIndicatorCalculations
 )
 
@@ -76,3 +76,20 @@ class GetFieldIndicatorCalculationsSerializer(serializers.ModelSerializer):
         model = FieldIndicatorCalculations
 
         exclude = ('user_id', 'id', )
+
+
+class ForeCastIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ForeCastIndicators
+
+        fields = '__all__'
+
+class GetForeCastIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ForeCastIndicators
+
+        fields = (
+            'field_id','avg_temperature', 'sum_precipitation', 'day'
+        )

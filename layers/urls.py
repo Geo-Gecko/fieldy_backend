@@ -5,7 +5,8 @@ from layers.views.polygon_views import (
     ListCreatePolygonLayer, ListCreateUpdateDestroyGridLayer
 )
 from layers.views.indicator_views import (
-    FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet
+    FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
+    GetForeCastIndicatorsViewSet
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
@@ -19,6 +20,9 @@ router.register(
 )
 router.register(
     "gridlayers", ListCreateUpdateDestroyGridLayer, basename="gridlayers"
+)
+router.register(
+    "forecastindicators", GetForeCastIndicatorsViewSet, basename="forecastindicators"
 )
 
 app_name = 'layers'

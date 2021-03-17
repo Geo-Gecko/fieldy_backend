@@ -138,3 +138,21 @@ class FieldIndicatorCalculations(models.Model):
     october = models.FloatField(null=True)
     november = models.FloatField(null=True)
     december = models.FloatField(null=True)
+
+
+class ForeCastIndicators(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["field_id", "day"],
+                name="unique forecast row"
+            )
+        ]
+
+    field_id = models.UUIDField(
+        editable=True, unique=False
+    )
+    day = models.DateTimeField(blank=False)
+    user_id = models.CharField(max_length=30, blank=False)
+    avg_temperature = models.FloatField(null=True)
+    sum_precipitation = models.FloatField(null=True)

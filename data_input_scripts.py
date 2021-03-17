@@ -178,6 +178,20 @@ with open("jan_feb_data.json", "+r") as json_file:
         #   }
         # })
 #         console.log(count)
-    
-
 #         })
+
+# TODO: UPLOADING forecastdata
+# forecastData.forEach((piece_, index) => {
+#   piece_["sum_precipitation"] = parseFloat(piece_["sum_precipitation"])
+#   piece_["avg_temperature"] = parseFloat(piece_["avg_temperature"])
+#   setTimeout(() => {
+#     return axiosInstance.post('/layers/forecastindicators/', piece_)
+#       .then(response => {
+#         console.log(response.data)
+#       })
+#   }, index * 500)
+# })
+# axiosInstance.post('/layers/forecastindicators/', forecastData[0])
+# .then(response => {
+#   console.log(response.data)
+# })
