@@ -46,17 +46,17 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         produces:
             - application/json
         """
-        user_data, user_id, user_member = verify_auth_token(request)
+        user_data, user = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if user_member != "":
-            user_id = user_member
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
 
-        queryset = ArrayedFieldIndicators.objects.filter(user_id=user_id)
+        queryset = ArrayedFieldIndicators.objects.filter(user_id=user["uid"])
         serializer = GetFieldIndicatorsSerializer(queryset, many=True)
         # import json;
         # with open('moringa_2019_2020.json', 'w') as fa_:
@@ -65,14 +65,14 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
 
     @swagger_auto_schema(auto_schema=None)
     def create(self, request, field_id=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         serializer = self.serializer_class(data=serializer_data)
 
         serializer.is_valid(raise_exception=True)
@@ -93,41 +93,41 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
         produces:
             - application/json
         """
-        user_data, user_id, user_member = verify_auth_token(request)
+        user_data, user = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if user_member != "":
-            user_id = user_member
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
 
         field_ndvi_obj = ArrayedFieldIndicators.objects.filter(
-            user_id=user_id, field_id=field_id
+            user_id=user["uid"], field_id=field_id
         )
         serializer = GetFieldIndicatorsSerializer(field_ndvi_obj, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, field_id=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
         # check this line in the previous view
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         try:
             field_ndvi_obj = ArrayedFieldIndicators.objects.get(
-                user_id=user_id, field_id=field_id
+                user_id=user["uid"], field_id=field_id
             )
             serializer = self.serializer_class(field_ndvi_obj, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except ArrayedFieldIndicators.DoesNotExist:
-            serializer_data['user_id'] = user_id
+            serializer_data['user_id'] = user["uid"]
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -143,17 +143,17 @@ class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
     schema = None
 
     def list(self, request):
-        user_data, user_id, user_member = verify_auth_token(request)
+        user_data, user = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if user_member != "":
-            user_id = user_member
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
 
-        queryset = FieldIndicatorCalculations.objects.filter(user_id=user_id)
+        queryset = FieldIndicatorCalculations.objects.filter(user_id=user["uid"])
         serializer = GetFieldIndicatorCalculationsSerializer(
             queryset, many=True
         )
@@ -161,14 +161,14 @@ class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
 
     # TODO: CREATE AND PUT TO BE EXCLUDED FROM DEPLOYED APP AS WELL
     def create(self, request, indicator=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         serializer = self.serializer_class(data=serializer_data)
 
         # serializer.is_valid(raise_exception=True)
@@ -177,23 +177,23 @@ class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, indicator=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
         # check this line in the previous view
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         try:
             field_ndvi_obj = FieldIndicatorCalculations.objects.get(
-                user_id=user_id, indicator=indicator
+                user_id=user["uid"], indicator=indicator
             )
             serializer = self.serializer_class(field_ndvi_obj, data=request.data)
             # serializer.is_valid(raise_exception=True)
             # serializer.save()
         except FieldIndicatorCalculations.DoesNotExist:
-            serializer_data['user_id'] = user_id
+            serializer_data['user_id'] = user["uid"]
             serializer = self.serializer_class(data=serializer_data)
             # serializer.is_valid(raise_exception=True)
             # serializer.save()
@@ -210,30 +210,30 @@ class GetForeCastIndicatorsViewSet(viewsets.ViewSet):
     schema = None
 
     def list(self, request):
-        user_data, user_id, user_member = verify_auth_token(request)
+        user_data, user = verify_auth_token(request)
         if user_data != {}:
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if user_member != "":
-            user_id = user_member
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
 
-        queryset = ForeCastIndicators.objects.filter(user_id=user_id)
+        queryset = ForeCastIndicators.objects.filter(user_id=user["uid"])
         serializer = GetForeCastIndicatorsSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # TODO: CREATE AND PUT TO BE EXCLUDED FROM DEPLOYED APP
     def create(self, request, field_id=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         serializer = self.serializer_class(data=serializer_data)
         # serializer.is_valid(raise_exception=True)
         # serializer.save()
@@ -241,23 +241,23 @@ class GetForeCastIndicatorsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, field_id=None):
-        serializer_data, user_id, user_member = verify_auth_token(request)
-        if not serializer_data or user_member != "":
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
         # check this line in the previous view
-        serializer_data['user_id'] = user_id
+        serializer_data['user_id'] = user["uid"]
         try:
             forecast_obj = ForeCastIndicators.objects.get(
-                user_id=user_id, field_id=field_id
+                user_id=user["uid"], field_id=field_id
             )
             serializer = self.serializer_class(forecast_obj, data=request.data)
             # serializer.is_valid(raise_exception=True)
             # serializer.save()
         except ForeCastIndicators.DoesNotExist:
-            serializer_data['user_id'] = user_id
+            serializer_data['user_id'] = user["uid"]
             serializer = self.serializer_class(data=serializer_data)
             # serializer.is_valid(raise_exception=True)
             # serializer.save()

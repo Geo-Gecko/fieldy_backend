@@ -1,3 +1,13 @@
+############ BATCH UPLOADS!!!!! #################
+"""send values as dicts of a dict"""
+# for row in request.data.values():
+#     s_ = self.serializer_class(data=row)
+#     s_.is_valid(raise_exception=True)
+#     s_.save()
+# TODO: get into interactive (using 'interact') dict || TO GET OUT --> CTRL+D
+##############################################
+
+
 """
 # import pandas as pd
 df = pd.read_csv('')
