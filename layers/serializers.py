@@ -57,6 +57,7 @@ class GetFieldIndicatorsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ArrayedFieldIndicators
+        ref_name = None
 
         fields = (
             'field_id','indicator', 'january', 'february', 'march', 'april', 'may',

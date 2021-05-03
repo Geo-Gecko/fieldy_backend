@@ -6,7 +6,8 @@ from rest_framework import (
     generics,
     status,
     serializers,
-    viewsets
+    viewsets,
+    mixins
 )
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
@@ -14,9 +15,10 @@ from rest_framework.permissions import (
     AllowAny
 )
 from rest_framework.response import Response
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from layers.views.polygon_views import verify_auth_token
 
+from layers.views.polygon_views import verify_auth_token
 from layers.models import (
     FieldIndicatorCalculations, ArrayedFieldIndicators, ForeCastIndicators
 )
@@ -33,16 +35,13 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
     lookup_field = 'field_id'
     permission_classes = (AllowAny,)
 
+    @swagger_auto_schema(
+        responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)}
+    )
     def list(self, request):
         """
         To list all the indicators for all fields
         ---
-        responseMessages:
-            - code: 401
-              message: Not authenticated
-            - code: 200
-              message: OK
-
         produces:
             - application/json
         """
