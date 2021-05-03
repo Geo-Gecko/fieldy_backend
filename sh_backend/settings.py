@@ -87,9 +87,41 @@ CORS_ALLOWED_ORIGINS = os.environ.get('SH_FRONTEND', 'http://localhost:3001').sp
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
+SWAGGER_SETTINGS = {
+    "SUPPORTED_SUBMIT_METHODS": [
+        "put","post","delete","options","head","patch","trace"
+    ],
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "SH APIKEY": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "description": "Key obtained from /users/authtoken",
+            "in": "header"
+        }
+    }
+}
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 REST_FRAMEWORK = {
 # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 # 'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'layers.throttles.BurstRateThrottle',
+        'layers.throttles.SustainedRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'burst': '60/min',
+        'sustained': '500/day'
+    }
 }
 
 GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')

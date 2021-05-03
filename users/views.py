@@ -6,8 +6,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
-# Create your views here.
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 from gql.transport.exceptions import TransportQueryError
@@ -20,27 +21,47 @@ transport = RequestsHTTPTransport(
 # Create a GraphQL client using the defined transport
 client = Client(transport=transport)
 
+
+
+
+@swagger_auto_schema(
+    method="post",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["username", "password"],
+        properties={
+            'username': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The user's name with the right capitalization and no spaces"
+            ),
+            'password': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description="The user's password"
+            )
+        }
+    ),
+    responses={
+        status.HTTP_200_OK: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "login": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "token": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description="token generated to make authenticated requests"
+                        )
+                    }
+                )
+            }
+        )
+    }
+)
 @api_view(['POST'])
 def get_auth_token(request):
     """
-    To get a token for authenticated use of field indicatos
+    To get a token for authenticated use of field indicators
     ---
-    parameters_strategy: merge
-    parameters:
-        - name: username
-          required: true
-          type: string
-          paramType: form
-        - name: password
-          required: true
-          type: string
-          paramType: form
-    responseMessages:
-        - code: 401
-            message: Not authenticated
-        - code: 201
-            message: Created
-
     produces:
         - application/json
         - application/xml
