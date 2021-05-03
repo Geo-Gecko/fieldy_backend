@@ -27,11 +27,11 @@ class RetrieveCreateUpdateUserDetail(
     schema = None
 
     def create(self, request, uu_id):
-        serializer_data, user_id, user_member = verify_auth_token(request)
+        serializer_data, user = verify_auth_token(request)
         if not serializer_data:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer_data['properties']['user_id'] = user_id
+        serializer_data['properties']['user_id'] = user["uid"]
         serializer = self.serializer_class(data=serializer_data)
 
         serializer.is_valid(raise_exception=True)
@@ -40,30 +40,39 @@ class RetrieveCreateUpdateUserDetail(
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get(self, request, uu_id):
-        user_data, user_id, user_member = verify_auth_token(request)
+        user_data, user = verify_auth_token(request)
         if user_data != {}:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
-        user_obj = get_object_or_404(ShUserDetail, user_id=user_id)
-        serializer = self.serializer_class(user_obj)
+        try:
+            user_obj = ShUserDetail.objects.get(user_id=user["uid"])
+            serializer = self.serializer_class(user_obj)
+            return Response(
+                {"current_center": serializer.data, "user_detail": user},
+                status=status.HTTP_200_OK
+            )
+        except ShUserDetail.DoesNotExist:
+            return Response(
+                {"current_center": None, "user_detail": user},
+                status=status.HTTP_200_OK
+            )
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, uu_id):
-        serializer_data, user_id, user_member = verify_auth_token(request)
+        serializer_data, user = verify_auth_token(request)
         if not serializer_data:
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer_data['properties']['user_id'] = user_id
+        serializer_data['properties']['user_id'] = user["uid"]
         try:
-            user_obj = ShUserDetail.objects.get(user_id=user_id)
+            user_obj = ShUserDetail.objects.get(user_id=user["uid"])
             serializer = self.serializer_class(user_obj, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except ShUserDetail.DoesNotExist:
-            serializer_data['properties']['user_id'] = user_id
+            serializer_data['properties']['user_id'] = user["uid"]
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()

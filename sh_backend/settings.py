@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG_VALUE', False)
+DEBUG = os.environ['DEBUG'] == 'True'
 
 ALLOWED_HOSTS = ["*"]
 
@@ -90,7 +90,6 @@ CORS_ALLOWED_ORIGINS = os.environ.get('SH_FRONTEND', 'http://localhost:3001').sp
 REST_FRAMEWORK = {
 # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 # 'PAGE_SIZE': 10,
-  'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
 }
 
 GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
@@ -132,10 +131,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'sh_backend', 'static')]
-VENV_PATH = os.path.dirname(BASE_DIR)
-STATIC_ROOT = os.path.join(VENV_PATH, 'sh_backend', 'static_root')
 
 
 DATABASES = {'default': dj_database_url.config(conn_max_age=600)}

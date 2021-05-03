@@ -74,4 +74,3 @@ def get_auth_token(request):
                 {"Messsage": error.__dict__['errors'][0]['message']},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            import pdb; pdb.set_trace()

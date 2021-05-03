@@ -50,10 +50,10 @@ class EmailThread(threading.Thread):
 
 @api_view(['POST'])
 def contact_us(request):
-    user_data, user_id, user_member = verify_auth_token(request)
+    user_data, user = verify_auth_token(request)
     if not user_data:
         return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
     if not user_data.get('message'):
         return Response({"Error": "Message has been sent"}, status=status.HTTP_400_BAD_REQUEST)
-    EmailThread(user_id, user_data.get('message')).start()
+    EmailThread(user["uid"], user_data.get('message')).start()
     return Response({"Messsage": "Email sent"}, status=status.HTTP_200_OK)
