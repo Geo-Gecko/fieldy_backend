@@ -12,3 +12,5 @@ app.yaml
 
 .coverage
 **/static_root/
+
+.vscode
