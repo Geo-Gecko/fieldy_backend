@@ -69,11 +69,13 @@ class RetrieveUpdateDestroyPolygonLayer(
     queryset = PolygonLayer.objects.all()
     serializer_class = PolygonLayerSerializer
     permission_classes = (AllowAny,)
+    lookup_field = 'field_id'
     schema = None
 
     def put(self, request, field_id):
         serializer_data, user = verify_auth_token(request)
-        if not serializer_data:
+        # TODO: ADD AUTHORIZATION...
+        if not serializer_data or user["memberOf"] != "":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
