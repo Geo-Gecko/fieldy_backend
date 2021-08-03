@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import jwt
 
-from layers.models import PolygonLayer, GridLayer
+from layers.models import PolygonLayer, PolygonJsonLayer, GridLayer
 from layers.serializers import (
     PolygonLayerSerializer, GridLayerSerializer, GetGridLayerSerializer
 )
@@ -44,8 +44,13 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
         if user["memberOf"] != "":
             user["uid"] = user["memberOf"]
 
-        queryset = PolygonLayer.objects.filter(user_id=user["uid"])
+        queryset = PolygonJsonLayer.objects.filter(user_id=user["uid"])
         serializer = self.serializer_class(queryset, many=True)
+        def move_field_user_ids(polygon_):
+            for col_ in ["field_id", "user_id"]:
+                polygon_["properties"][col_] = polygon_[col_]
+                del polygon_[col_]
+        list(map(move_field_user_ids, serializer.data))
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
@@ -54,6 +59,9 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer_data['properties']['user_id'] = user["uid"]
+        for col_ in ["field_id", "user_id"]:
+            serializer_data[col_] = serializer_data['properties'][col_]
+            del serializer_data["properties"][col_]
         serializer = self.serializer_class(data=serializer_data)
 
         serializer.is_valid(raise_exception=True)
@@ -66,7 +74,7 @@ class RetrieveUpdateDestroyPolygonLayer(
     generics.RetrieveUpdateDestroyAPIView
 ):
 
-    queryset = PolygonLayer.objects.all()
+    queryset = PolygonJsonLayer.objects.all()
     serializer_class = PolygonLayerSerializer
     permission_classes = (AllowAny,)
     lookup_field = 'field_id'
@@ -81,7 +89,7 @@ class RetrieveUpdateDestroyPolygonLayer(
                 status=status.HTTP_403_FORBIDDEN
             )
         layer_ = get_object_or_404(
-            PolygonLayer, field_id=field_id, user_id=user["uid"]
+            PolygonJsonLayer, field_id=field_id, user_id=user["uid"]
         )
         serializer = self.serializer_class(layer_, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -97,7 +105,7 @@ class RetrieveUpdateDestroyPolygonLayer(
                 status=status.HTTP_403_FORBIDDEN
             )
         layer_ = get_object_or_404(
-            PolygonLayer, field_id=field_id, user_id=user["uid"]
+            PolygonJsonLayer, field_id=field_id, user_id=user["uid"]
         )
         layer_.delete()
 
