@@ -43,6 +43,19 @@ class PolygonLayer(gis_models.Model):
 
 
 
+class GridJsonLayer(models.Model):
+    type = models.CharField(max_length=15, blank=False)
+    field_id = models.UUIDField(
+        default=uuid.uuid4, editable=False, unique=True
+    )
+    # field_id is to be used to update the fields
+    user_id = models.CharField(max_length=30, blank=False)
+    properties = models.JSONField(blank=True, default=dict)
+    geometry = models.JSONField(blank=True, unique=True)
+
+    def __str__(self):
+        return str(self.field_id)
+
 
 class GridLayer(gis_models.Model):
     # TODO: this should be layer_id

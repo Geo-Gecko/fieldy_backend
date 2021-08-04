@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
     PolygonLayer, PolygonJsonLayer, ShUserDetail, ForeCastIndicators,
-    ArrayedFieldIndicators, GridLayer, FieldIndicatorCalculations
+    ArrayedFieldIndicators, GridJsonLayer, FieldIndicatorCalculations
 )
 
 class PolygonLayerSerializer(serializers.ModelSerializer):
@@ -13,20 +13,32 @@ class PolygonLayerSerializer(serializers.ModelSerializer):
         fields = ("type", "field_id", "user_id", "properties", "geometry")
 
 
-class GridLayerSerializer(GeoFeatureModelSerializer):
+class GridLayerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GridLayer
-        geo_field = "shpolygon"
+        model = GridJsonLayer
 
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
 
-class GetGridLayerSerializer(GeoFeatureModelSerializer):
+        for col_ in ["user_id", "field_id"]:
+            representation["properties"][col_] = representation[col_]
+            del representation[col_]
+
+        return representation
+
+    def to_internal_value(self, data):
+        for col_ in ["user_id", "field_id"]:
+            data[col_] = data["properties"][col_]
+            del data["properties"][col_]
+        return super().to_internal_value(data)
+
+class GetGridLayerSerializer(GridLayerSerializer):
     class Meta:
-        model = GridLayer
-        geo_field = "shpolygon"
+        model = GridJsonLayer
 
-        fields = ("field_id", "count", "field_attributes", "shpolygon")
+        fields = ("type", "user_id", "field_id", "properties", "geometry")
 
 
 class ShUserDetailSerializer(serializers.ModelSerializer):
@@ -50,8 +62,6 @@ class ShUserDetailSerializer(serializers.ModelSerializer):
         for col_ in ["user_id", "zoom_level"]:
             data[col_] = data["properties"][col_]
         del data["properties"]
-
-
         return super().to_internal_value(data)
 
 class FieldIndicatorsSerializer(serializers.ModelSerializer):

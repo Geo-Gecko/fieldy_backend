@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import jwt
 
-from layers.models import PolygonLayer, PolygonJsonLayer, GridLayer
+from layers.models import PolygonLayer, PolygonJsonLayer, GridJsonLayer
 from layers.serializers import (
     PolygonLayerSerializer, GridLayerSerializer, GetGridLayerSerializer
 )
@@ -121,7 +121,7 @@ class ListCreateUpdateDestroyGridLayer(viewsets.ModelViewSet):
     serializer_class = GridLayerSerializer
     lookup_field = 'field_id'
     permission_classes = (AllowAny,)
-    queryset = GridLayer.objects.all()
+    queryset = GridJsonLayer.objects.all()
     schema = None
 
     def list(self, request):
@@ -133,7 +133,7 @@ class ListCreateUpdateDestroyGridLayer(viewsets.ModelViewSet):
         if user["memberOf"] != "":
             user["uid"] = user["memberOf"]
 
-        queryset = GridLayer.objects.filter(user_id=user["uid"])
+        queryset = GridJsonLayer.objects.filter(user_id=user["uid"])
         serializer = GetGridLayerSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -163,13 +163,13 @@ class ListCreateUpdateDestroyGridLayer(viewsets.ModelViewSet):
     #     # check this line in the previous view
     #     serializer_data['user_id'] = user["uid"]
     #     try:
-    #         field_ndvi_obj = GridLayer.objects.get(
+    #         field_ndvi_obj = GridJsonLayer.objects.get(
     #             user_id=user["uid"], field_id=field_id
     #         )
     #         serializer = self.serializer_class(field_ndvi_obj, data=request.data)
     #         serializer.is_valid(raise_exception=True)
     #         serializer.save()
-    #     except GridLayer.DoesNotExist:
+    #     except GridJsonLayer.DoesNotExist:
     #         serializer_data['user_id'] = user["uid"]
     #         serializer = self.serializer_class(data=serializer_data)
     #         serializer.is_valid(raise_exception=True)
@@ -185,7 +185,7 @@ class ListCreateUpdateDestroyGridLayer(viewsets.ModelViewSet):
     #             status=status.HTTP_403_FORBIDDEN
     #         )
     #     layer_ = get_object_or_404(
-    #         GridLayer, field_id=field_id, user_id=user["uid"]
+    #         GridJsonLayer, field_id=field_id, user_id=user["uid"]
     #     )
     #     layer_.delete()
 
