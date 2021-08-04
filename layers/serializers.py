@@ -29,14 +29,30 @@ class GetGridLayerSerializer(GeoFeatureModelSerializer):
         fields = ("field_id", "count", "field_attributes", "shpolygon")
 
 
-class ShUserDetailSerializer(GeoFeatureModelSerializer):
+class ShUserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShUserDetail
-        geo_field = "center"
 
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        representation["properties"] = {}
+        for col_ in ["user_id", "zoom_level"]:
+            representation["properties"][col_] = representation[col_]
+            del representation[col_]
+
+        return representation
+
+    def to_internal_value(self, data):
+        for col_ in ["user_id", "zoom_level"]:
+            data[col_] = data["properties"][col_]
+        del data["properties"]
+
+
+        return super().to_internal_value(data)
 
 class FieldIndicatorsSerializer(serializers.ModelSerializer):
 

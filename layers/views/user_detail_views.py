@@ -31,7 +31,6 @@ class RetrieveCreateUpdateUserDetail(
         if not serializer_data:
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer_data['properties']['user_id'] = user["uid"]
         serializer = self.serializer_class(data=serializer_data)
 
         serializer.is_valid(raise_exception=True)
@@ -65,14 +64,16 @@ class RetrieveCreateUpdateUserDetail(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
             )
-        serializer_data['properties']['user_id'] = user["uid"]
+
+        serializer_data["properties"]['user_id'] = user["uid"]
+        request.data["properties"]['user_id'] = user["uid"]
+
         try:
             user_obj = ShUserDetail.objects.get(user_id=user["uid"])
             serializer = self.serializer_class(user_obj, data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
         except ShUserDetail.DoesNotExist:
-            serializer_data['properties']['user_id'] = user["uid"]
             serializer = self.serializer_class(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
