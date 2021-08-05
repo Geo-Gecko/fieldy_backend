@@ -42,9 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.postgres',
     'corsheaders',
-    'django.contrib.gis',
     'rest_framework',
-    'rest_framework_gis',
     'layers',
     'users',
     'drf_yasg',
@@ -124,8 +122,6 @@ REST_FRAMEWORK = {
     }
 }
 
-GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
-GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -168,4 +164,5 @@ STATIC_URL = '/static/'
 
 
 DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
-DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+# NOTE: this below is needed for testing
+# DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'

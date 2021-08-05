@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
-    PolygonLayer, PolygonJsonLayer, ShUserDetail, ForeCastIndicators,
+    PolygonJsonLayer, ShUserDetail, ForeCastIndicators,
     ArrayedFieldIndicators, GridJsonLayer, FieldIndicatorCalculations
 )
 

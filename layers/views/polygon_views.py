@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import jwt
 
-from layers.models import PolygonLayer, PolygonJsonLayer, GridJsonLayer
+from layers.models import PolygonJsonLayer, GridJsonLayer
 from layers.serializers import (
     PolygonLayerSerializer, GridLayerSerializer, GetGridLayerSerializer
 )
