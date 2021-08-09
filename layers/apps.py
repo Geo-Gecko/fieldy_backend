@@ -6,6 +6,6 @@ class LayersConfig(AppConfig):
     name = 'layers'
 
     def ready(self):
-        from .models import PolygonLayer
+        from .models import PolygonJsonLayer
         from .signals import delete_after_polygon
-        post_delete.connect(delete_after_polygon, sender=PolygonLayer)
+        post_delete.connect(delete_after_polygon, sender=PolygonJsonLayer)

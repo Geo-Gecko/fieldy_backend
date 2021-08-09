@@ -1,10 +1,9 @@
 from django.contrib import admin
 from layers.models import (
-    PolygonLayer, PointLayer, ShUserDetail, FieldIndicators
+    PolygonJsonLayer, ShUserDetail, ArrayedFieldIndicators
 )
 
 # Register your models here.
-admin.site.register(PolygonLayer)
-admin.site.register(PointLayer)
+admin.site.register(PolygonJsonLayer)
 admin.site.register(ShUserDetail)
-admin.site.register(FieldIndicators)
+admin.site.register(ArrayedFieldIndicators)

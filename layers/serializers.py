@@ -1,50 +1,67 @@
 from rest_framework import serializers
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from .models import (
-    PointLayer, PolygonLayer, ShUserDetail, ForeCastIndicators,
-    ArrayedFieldIndicators, GridLayer, FieldIndicatorCalculations
+    PolygonJsonLayer, ShUserDetail, ForeCastIndicators,
+    ArrayedFieldIndicators, GridJsonLayer, FieldIndicatorCalculations
 )
 
-class PolygonLayerSerializer(GeoFeatureModelSerializer):
+class PolygonLayerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PolygonLayer
-        geo_field = "shpolygon"
+        model = PolygonJsonLayer
+
+        fields = ("type", "field_id", "user_id", "properties", "geometry")
+
+
+class GridLayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GridJsonLayer
 
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
 
-class PointLayerSerializer(GeoFeatureModelSerializer):
+        for col_ in ["user_id", "field_id"]:
+            representation["properties"][col_] = representation[col_]
+            del representation[col_]
+
+        return representation
+
+    def to_internal_value(self, data):
+        for col_ in ["user_id", "field_id"]:
+            data[col_] = data["properties"][col_]
+            del data["properties"][col_]
+        return super().to_internal_value(data)
+
+class GetGridLayerSerializer(GridLayerSerializer):
     class Meta:
-        model = PointLayer
-        geo_field = "shpoint"
+        model = GridJsonLayer
 
-        fields = '__all__'
-
-class GridLayerSerializer(GeoFeatureModelSerializer):
-    class Meta:
-        model = GridLayer
-        geo_field = "shpolygon"
-
-        fields = '__all__'
+        fields = ("type", "user_id", "field_id", "properties", "geometry")
 
 
-class GetGridLayerSerializer(GeoFeatureModelSerializer):
-    class Meta:
-        model = GridLayer
-        geo_field = "shpolygon"
-
-        fields = ("field_id", "count", "field_attributes", "shpolygon")
-
-
-class ShUserDetailSerializer(GeoFeatureModelSerializer):
+class ShUserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShUserDetail
-        geo_field = "center"
 
         fields = '__all__'
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        representation["properties"] = {}
+        for col_ in ["user_id", "zoom_level"]:
+            representation["properties"][col_] = representation[col_]
+            del representation[col_]
+
+        return representation
+
+    def to_internal_value(self, data):
+        for col_ in ["user_id", "zoom_level"]:
+            data[col_] = data["properties"][col_]
+        del data["properties"]
+        return super().to_internal_value(data)
 
 class FieldIndicatorsSerializer(serializers.ModelSerializer):
 
