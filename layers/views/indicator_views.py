@@ -2,11 +2,9 @@ import os
 
 from django.shortcuts import get_object_or_404
 from rest_framework import (
-    exceptions,
-    generics,
     status,
-    serializers,
     viewsets,
+    pagination,
     mixins
 )
 from rest_framework.permissions import (
@@ -29,11 +27,21 @@ from layers.serializers import (
 )
 
 
-class FieldIndicatorsViewSet(viewsets.ViewSet):
+from rest_framework import pagination
+
+class IndicatorResultsSetPagination(pagination.LimitOffsetPagination):
+    default_limit = 50000
+    max_limit = 50000
+
+
+class FieldIndicatorsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
 
     serializer_class = FieldIndicatorsSerializer
     lookup_field = 'field_id'
     permission_classes = (AllowAny,)
+    pagination_class = IndicatorResultsSetPagination
 
     @swagger_auto_schema(
         responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)}
@@ -56,7 +64,13 @@ class FieldIndicatorsViewSet(viewsets.ViewSet):
             user["uid"] = user["memberOf"]
 
         queryset = ArrayedFieldIndicators.objects.filter(user_id=user["uid"])
-        serializer = GetFieldIndicatorsSerializer(queryset, many=True)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = GetFieldIndicatorsSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = GetFieldIndicatorsSerializer(queryset, many=True)
         # import json;
         # with open('moringa_2019_2020.json', 'w') as fa_:
         #     json.dump(serializer.data, fa_)
