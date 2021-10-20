@@ -1,7 +1,7 @@
 import os
 
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, pagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import jwt
@@ -28,11 +28,18 @@ def verify_auth_token(request):
     return False, ""
 
 
+
+class PolygonResultsSetPagination(pagination.LimitOffsetPagination):
+    default_limit = 2000
+    max_limit = 2000
+
+
 class ListCreatePolygonLayer(generics.ListCreateAPIView):
     """URL to list view and create polygons"""
 
     serializer_class = PolygonLayerSerializer
     permission_classes = (AllowAny,)
+    pagination_class = PolygonResultsSetPagination
     schema = None
 
     def list(self, request):
@@ -45,12 +52,21 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
             user["uid"] = user["memberOf"]
 
         queryset = PolygonJsonLayer.objects.filter(user_id=user["uid"])
-        serializer = self.serializer_class(queryset, many=True)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
         def move_field_user_ids(polygon_):
             for col_ in ["field_id", "user_id"]:
                 polygon_["properties"][col_] = polygon_[col_]
                 del polygon_[col_]
         list(map(move_field_user_ids, serializer.data))
+
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
