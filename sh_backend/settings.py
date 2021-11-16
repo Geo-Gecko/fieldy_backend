@@ -169,3 +169,8 @@ DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
 
 import dj_database_url
 DATABASES['default'] = dj_database_url.config()
+
+"""
+CREATE NEW MIGRATION FILES
+# https://simpleisbetterthancomplex.com/tutorial/2016/07/26/how-to-reset-migrations.html
+"""
