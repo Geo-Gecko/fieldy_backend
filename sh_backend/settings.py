@@ -166,3 +166,6 @@ STATIC_URL = '/static/'
 DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
 # NOTE: this below is needed for testing
 # DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+
+import dj_database_url
+DATABASES['default'] = dj_database_url.config()
