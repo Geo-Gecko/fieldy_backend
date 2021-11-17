@@ -147,8 +147,8 @@ class FieldIndicatorsViewSet(
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
+# NOTE: viewsets.ViewSet doesn't have put or delete
+class FieldIndicatorCalculationsViewSet(viewsets.ModelViewSet):
 
     serializer_class = FieldIndicatorCalculationsSerializer
     lookup_field = 'indicator'
@@ -189,7 +189,7 @@ class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def put(self, request, indicator=None):
+    def update(self, request, indicator=None):
         serializer_data, user = verify_auth_token(request)
         if not serializer_data or user["memberOf"] != "":
             return Response(
@@ -200,7 +200,7 @@ class FieldIndicatorCalculationsViewSet(viewsets.ViewSet):
         serializer_data['user_id'] = user["uid"]
         try:
             field_ndvi_obj = FieldIndicatorCalculations.objects.get(
-                user_id=user["uid"], indicator=indicator
+                user_id=user["uid"], indicator=indicator, crop_type=request.data["crop_type"]
             )
             serializer = self.serializer_class(field_ndvi_obj, data=request.data)
             # serializer.is_valid(raise_exception=True)
