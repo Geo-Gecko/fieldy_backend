@@ -58,11 +58,6 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
             serializer = self.get_serializer(page, many=True)
         else:
             serializer = self.serializer_class(queryset, many=True)
-        def move_field_user_ids(polygon_):
-            for col_ in ["field_id", "user_id"]:
-                polygon_["properties"][col_] = polygon_[col_]
-                del polygon_[col_]
-        list(map(move_field_user_ids, serializer.data))
 
         if page is not None:
             return self.get_paginated_response(serializer.data)
@@ -74,10 +69,6 @@ class ListCreatePolygonLayer(generics.ListCreateAPIView):
         if not serializer_data or user["memberOf"] != "":
             return Response({"Error": "Unauthorized request"}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer_data['properties']['user_id'] = user["uid"]
-        for col_ in ["field_id", "user_id"]:
-            serializer_data[col_] = serializer_data['properties'][col_]
-            del serializer_data["properties"][col_]
         serializer = self.serializer_class(data=serializer_data)
 
         serializer.is_valid(raise_exception=True)
