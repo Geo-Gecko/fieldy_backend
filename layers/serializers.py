@@ -11,6 +11,20 @@ class PolygonLayerSerializer(serializers.ModelSerializer):
 
         fields = ("type", "field_id", "user_id", "properties", "geometry")
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        for col_ in ["user_id", "field_id"]:
+            representation["properties"][col_] = representation[col_]
+            del representation[col_]
+
+        return representation
+
+    def to_internal_value(self, data):
+        for col_ in ["user_id", "field_id"]:
+            data[col_] = data["properties"][col_]
+            del data["properties"][col_]
+        return super().to_internal_value(data)
 
 class GridLayerSerializer(serializers.ModelSerializer):
     class Meta:
