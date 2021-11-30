@@ -56,21 +56,27 @@ class FieldIndicatorAnalyticsViewSet(
     pagination_class = IndicatorResultsSetPagination
 
     @swagger_auto_schema(
-        responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)},
-        # TODO: Regenerate swagger docs
-        parameters=[{"name": "month", "in": "query", "schema": {"type": str}, "description": "month for retrieval"}]
+    manual_parameters=[
+        openapi.Parameter(
+            'indicator', openapi.IN_QUERY,
+            description="indicator type to retrieve", type=openapi.TYPE_STRING, default="field_rainfall"
+        ),
+        openapi.Parameter(
+            'month', openapi.IN_QUERY, description="month for retrieval", type=openapi.TYPE_STRING, default="previous month"
+        ),
+        openapi.Parameter(
+            'position', openapi.IN_QUERY, description="top or bottom results to retrieve", type=openapi.TYPE_STRING, default="top"
+        ),
+        openapi.Parameter(
+            'percentage', openapi.IN_QUERY, description="number of results to obtain as a percentage of total results per indicator per month",
+            type=openapi.TYPE_INTEGER, default=15
+        )
+    ],
+    responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)},
     )
     def list(self, request):
         """
         Query analytics
-        ---
-        Operation:
-            parameters:
-                - in: query
-                name: month
-                schema:
-                    type: string
-                description: The month for which top 15% should be returned
         """
         user_data, user = verify_auth_token(request)
         if user_data != {} or user["memberOf"] != "61164207eaef91000adcfeab":
