@@ -6,7 +6,7 @@ from layers.views.polygon_views import (
 )
 from layers.views.indicator_views import (
     FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
-    GetForeCastIndicatorsViewSet
+    GetForeCastIndicatorsViewSet, FieldIndicatorAnalyticsViewSet
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
@@ -14,6 +14,9 @@ from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
 router = DefaultRouter()
 router.register(
     "fieldindicators", FieldIndicatorsViewSet, basename="fieldindicators"
+)
+router.register(
+    "fieldindicatoranalytics", FieldIndicatorAnalyticsViewSet, basename="fieldindicatoranalytics"
 )
 router.register(
     "indicatorcalculations", FieldIndicatorCalculationsViewSet, basename="indicatorcalculations"

@@ -88,6 +88,7 @@ CORS_ALLOWED_ORIGINS = os.environ.get('SH_FRONTEND', 'http://localhost:3001').sp
 
 SWAGGER_SETTINGS = {
     "SUPPORTED_SUBMIT_METHODS": [
+        # NOTE: In here is where "try it out" is disabled. for all get methods
         "put","post","delete","options","head","patch","trace"
     ],
     "USE_SESSION_AUTH": False,

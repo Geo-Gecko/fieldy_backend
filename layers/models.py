@@ -3,12 +3,6 @@ import uuid
 from django.db import models
 
 
-MONTHS_ = (
-    'january', 'february', 'march', 'april', 'may', 'june',
-    'july', 'august', 'september', 'october', 'november', 'december'
-)
-
-
 class PolygonJsonLayer(models.Model):
     type = models.CharField(max_length=15, blank=False)
     field_id = models.UUIDField(
