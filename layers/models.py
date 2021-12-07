@@ -115,3 +115,23 @@ class ForeCastIndicators(models.Model):
     user_id = models.CharField(max_length=30, blank=False)
     avg_temperature = models.FloatField(null=True)
     sum_precipitation = models.FloatField(null=True)
+
+
+class AFSISIndicators(models.Model):
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["field_id"],
+                name="unique afsis row"
+            )
+        ]
+
+    field_id = models.UUIDField(
+        editable=True, unique=False
+    )
+    user_id = models.CharField(max_length=30, blank=False)
+    field_aluminium = models.FloatField(null=True)
+    field_bedrock = models.FloatField(null=True)
+    field_carbon = models.FloatField(null=True)
+    field_fcc = models.FloatField(null=True)
+    field_ph = models.FloatField(null=True)

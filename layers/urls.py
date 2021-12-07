@@ -6,12 +6,15 @@ from layers.views.polygon_views import (
 )
 from layers.views.indicator_views import (
     FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
-    GetForeCastIndicatorsViewSet, FieldIndicatorAnalyticsViewSet
+    GetForeCastIndicatorsViewSet, FieldIndicatorAnalyticsViewSet, AFSISIndicatorsViewSet
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
 
 router = DefaultRouter()
+router.register(
+    "afsisdata", AFSISIndicatorsViewSet, basename="afsisdata"
+)
 router.register(
     "fieldindicators", FieldIndicatorsViewSet, basename="fieldindicators"
 )

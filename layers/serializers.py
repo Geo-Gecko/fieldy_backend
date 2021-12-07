@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .models import (
-    PolygonJsonLayer, ShUserDetail, ForeCastIndicators,
+    PolygonJsonLayer, ShUserDetail, ForeCastIndicators, AFSISIndicators,
     ArrayedFieldIndicators, GridJsonLayer, FieldIndicatorCalculations
 )
 
@@ -124,4 +124,24 @@ class GetForeCastIndicatorsSerializer(serializers.ModelSerializer):
 
         fields = (
             'field_id','avg_temperature', 'sum_precipitation', 'day'
+        )
+
+
+class AFSISIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AFSISIndicators
+
+        fields = '__all__'
+
+
+class GetAFSISIndicatorsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AFSISIndicators
+        ref_name = None
+
+        fields = (
+            'field_id','field_aluminium', 'field_fcc',
+            'field_bedrock', 'field_carbon', 'field_ph'
         )

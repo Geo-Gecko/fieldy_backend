@@ -19,12 +19,14 @@ from drf_yasg.utils import swagger_auto_schema
 
 from layers.views.polygon_views import verify_auth_token
 from layers.models import (
-    FieldIndicatorCalculations, ArrayedFieldIndicators, ForeCastIndicators
+    FieldIndicatorCalculations, ArrayedFieldIndicators,
+    ForeCastIndicators, AFSISIndicators
 )
 from layers.serializers import (
     FieldIndicatorsSerializer, FieldIndicatorCalculationsSerializer,
     GetFieldIndicatorCalculationsSerializer, GetForeCastIndicatorsSerializer,
-    GetFieldIndicatorsSerializer, ForeCastIndicatorsSerializer
+    GetFieldIndicatorsSerializer, ForeCastIndicatorsSerializer,
+    AFSISIndicatorsSerializer, GetAFSISIndicatorsSerializer,
 )
 
 
@@ -43,6 +45,119 @@ available_indicators = [
 class IndicatorResultsSetPagination(pagination.LimitOffsetPagination):
     default_limit = 50000
     max_limit = 50000
+
+
+
+class AFSISIndicatorsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+
+    serializer_class = AFSISIndicatorsSerializer
+    lookup_field = 'field_id'
+    permission_classes = (AllowAny,)
+    pagination_class = IndicatorResultsSetPagination
+
+    @swagger_auto_schema(
+        responses={status.HTTP_200_OK: GetAFSISIndicatorsSerializer(many=True)}
+    )
+    def list(self, request):
+        """
+        List AFSIS for fields
+        ---
+        produces:
+            - application/json
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {} or user["memberOf"] != "61164207eaef91000adcfeab":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
+
+        queryset = AFSISIndicators.objects.filter(user_id=user["uid"])
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = GetAFSISIndicatorsSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = GetAFSISIndicatorsSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(auto_schema=None)
+    def create(self, request, field_id=None):
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer_data['user_id'] = user["uid"]
+        serializer = self.serializer_class(data=serializer_data)
+
+        # NOTE: Comment this out on deploying
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, field_id=None):
+        """
+        List AFSIS for a particular field
+        ---
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+            - code: 200
+              message: OK
+
+        produces:
+            - application/json
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {}:
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
+
+        field_afsis_obj = AFSISIndicators.objects.filter(
+            user_id=user["uid"], field_id=field_id
+        )
+        serializer = GetAFSISIndicatorsSerializer(field_afsis_obj, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, field_id=None):
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # check this line in the previous view
+        serializer_data['user_id'] = user["uid"]
+        try:
+            field_ndvi_obj = AFSISIndicators.objects.get(
+                user_id=user["uid"], field_id=field_id
+            )
+            serializer = self.serializer_class(field_ndvi_obj, data=request.data)
+            # serializer.is_valid(raise_exception=True)
+            # serializer.save()
+        except AFSISIndicators.DoesNotExist:
+            serializer_data['user_id'] = user["uid"]
+            serializer = self.serializer_class(data=serializer_data)
+            # serializer.is_valid(raise_exception=True)
+            # serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 
@@ -95,7 +210,6 @@ class FieldIndicatorAnalyticsViewSet(
         position = request.query_params.get("position", "top")
         percentage = request.query_params.get("percentage", 15)
 
-        print(month_, month_ in MONTHS_)
         if month_ not in MONTHS_:
              return Response(
                 {"Error": "Month provided should be of lower case, like: january"},
