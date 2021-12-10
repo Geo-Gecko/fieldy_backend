@@ -17,7 +17,6 @@ from django.contrib import admin
 from django.conf.urls import include, url
 from django.urls import path
 
-from rest_framework import permissions
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
@@ -34,5 +33,6 @@ urlpatterns = [
     url('^$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('admin/', admin.site.urls),
     path('layers/', include('layers.urls', namespace='layers-urls')),
+    path('indicatoranalytics/', include('indicator_analytics.urls', namespace='indicator_analytics-urls')),
     path('users/', include('users.urls'))
 ]

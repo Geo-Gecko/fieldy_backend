@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'layers',
     'users',
+    'indicator_analytics',
     'drf_yasg',
 ]
 
