@@ -161,7 +161,7 @@ class AFSISIndicatorsViewSet(
 
 
 
-class FieldIndicatorAnalyticsViewSet(
+class FieldIndicatorsTopBottomViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin
 ):
 
