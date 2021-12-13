@@ -1,4 +1,4 @@
-from django.urls import include, path, re_path
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from layers.views.contact_views import contact_us
 from layers.views.polygon_views import (
@@ -6,7 +6,7 @@ from layers.views.polygon_views import (
 )
 from layers.views.indicator_views import (
     FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
-    GetForeCastIndicatorsViewSet, FieldIndicatorAnalyticsViewSet, AFSISIndicatorsViewSet
+    GetForeCastIndicatorsViewSet, AFSISIndicatorsViewSet
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
@@ -17,9 +17,6 @@ router.register(
 )
 router.register(
     "fieldindicators", FieldIndicatorsViewSet, basename="fieldindicators"
-)
-router.register(
-    "fieldindicatoranalytics", FieldIndicatorAnalyticsViewSet, basename="fieldindicatoranalytics"
 )
 router.register(
     "indicatorcalculations", FieldIndicatorCalculationsViewSet, basename="indicatorcalculations"
