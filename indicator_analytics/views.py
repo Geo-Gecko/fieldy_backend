@@ -59,10 +59,10 @@ class FieldIndicatorsTopBottomViewSet(
     )
     def list(self, request):
         """
-        Query analytics
+        Query Top and bottom performing fields
         """
         user_data, user = verify_auth_token(request)
-        if user_data != {} or user["memberOf"] != "61164207eaef91000adcfeab":
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
@@ -123,3 +123,58 @@ class FieldIndicatorsTopBottomViewSet(
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class FieldIndicatorsNDVIChangeViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+
+    serializer_class = FieldIndicatorsSerializer
+    lookup_field = 'indicator'
+    permission_classes = (AllowAny,)
+    pagination_class = IndicatorResultsSetPagination
+
+    @swagger_auto_schema(
+        responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)},
+    )
+    def list(self, request):
+        """
+        Query NDVI Changes
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
+
+        def get_differences(results_):
+            for row_ in results_.data:
+                for i, month_ in enumerate(MONTHS_):
+                    try:
+                        row_[f"{month_}_{MONTHS_[i+1]}_difference"] = round(row_[month_] - row_[MONTHS_[i+1]], 2)
+                        del row_[month_]
+                    except IndexError:
+                        row_[f"{month_}_difference"] = "Waiting for coming month"
+                        del row_[month_]
+                        continue
+                    except TypeError:
+                        row_[f"{month_}_difference"] = "Next month had no value"
+                        del row_[month_]
+            return results_
+
+        queryset = ArrayedFieldIndicators.objects.filter(
+            user_id=user["uid"], indicator="field_ndvi"
+        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            results_ = GetFieldIndicatorsSerializer(page, many=True)
+            results_ = get_differences(results_)
+            return self.get_paginated_response(results_.data)
+        else:
+            results_ = GetFieldIndicatorsSerializer(queryset, many=True)
+            results_ = get_differences(results_)
+        
+        return Response(results_.data, status=status.HTTP_200_OK)

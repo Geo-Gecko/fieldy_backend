@@ -50,7 +50,7 @@ class AFSISIndicatorsViewSet(
             - application/json
         """
         user_data, user = verify_auth_token(request)
-        if user_data != {} or user["memberOf"] != "61164207eaef91000adcfeab":
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
@@ -101,7 +101,7 @@ class AFSISIndicatorsViewSet(
             - application/json
         """
         user_data, user = verify_auth_token(request)
-        if user_data != {}:
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
             return Response(
                 {"Error": "Unauthorized request"},
                 status=status.HTTP_403_FORBIDDEN
