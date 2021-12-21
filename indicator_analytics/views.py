@@ -1,4 +1,5 @@
 
+from itertools import groupby, chain
 from datetime import datetime, timedelta
 
 from drf_yasg import openapi
@@ -279,13 +280,19 @@ class FieldIndicatorsNDVIChangeViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin
 ):
 
-    serializer_class = FieldIndicatorsSerializer
-    lookup_field = 'indicator'
+    serializer_class = WeeklyFieldIndicatorsSerializer
+    lookup_field = 'field_id'
     permission_classes = (AllowAny,)
     pagination_class = IndicatorResultsSetPagination
 
     @swagger_auto_schema(
-        responses={status.HTTP_200_OK: GetFieldIndicatorsSerializer(many=True)},
+    manual_parameters=[
+        openapi.Parameter(
+            'earliest_month', openapi.IN_QUERY, default="previous month",
+            description="furthest month back to be retrieved", type=openapi.TYPE_STRING,
+        )
+    ],
+        responses={status.HTTP_200_OK: GetWeeklyFieldIndicatorsSerializer(many=True)},
     )
     def list(self, request):
         """
@@ -301,31 +308,52 @@ class FieldIndicatorsNDVIChangeViewSet(
         if user["memberOf"] != "":
             user["uid"] = user["memberOf"]
 
+        earliest_month = datetime.now() - timedelta(days=42)
+        earliest_month = earliest_month.strftime("%B").lower()
+        earliest_month = request.query_params.get("earliest_month", earliest_month)
+        if earliest_month not in MONTHS_:
+            return Response(
+                {"Error": f"Month passed should be among: {MONTHS_}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if type(earliest_month) == str:
+            year = datetime.now().year if MONTHS_.index(earliest_month)+1 - datetime.now().month < 0 else (datetime.now() - timedelta(days=366)).year
+            earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")#.strftime("%Y-%m-%d")
+
+        queryset = WeeklyFieldIndicators.objects.filter(
+            user_id=user["uid"], date_observed__gt=earliest_month
+        ).order_by("-date_observed")
+
         def get_differences(results_):
-            for row_ in results_.data:
-                for i, month_ in enumerate(MONTHS_):
+            group_fids = []
+            list_results = list(results_.data)
+            # groupby needs the sorting
+            list_results.sort(key=lambda x: x["field_id"])
+            for k,g in groupby(list_results, key=lambda x: x["field_id"]):
+                group_fids.append(list(g))
+            for field_data in group_fids:
+                for i, row_ in enumerate(field_data):
                     try:
-                        row_[f"{month_}_{MONTHS_[i+1]}_difference"] = round(row_[month_] - row_[MONTHS_[i+1]], 2)
-                        del row_[month_]
+                        row_[f"{row_['date_observed']} - {field_data[i+1]['date_observed']}"] = row_["field_ndvi"] - field_data[i+1]["field_ndvi"]
+                        for kator in available_indicators:
+                            try:
+                                del row_[kator]
+                            except KeyError:
+                                del row_["field_precipitation"]
+                        del row_['date_observed']
                     except IndexError:
-                        row_[f"{month_}_difference"] = "Waiting for coming month"
-                        del row_[month_]
                         continue
-                    except TypeError:
-                        row_[f"{month_}_difference"] = "Next month had no value"
-                        del row_[month_]
+                # exclude last element in the group since it wasn't subtracted from anything
+            results_ = list(chain.from_iterable([el[:len(el) - 1] for el in group_fids]))
             return results_
 
-        queryset = ArrayedFieldIndicators.objects.filter(
-            user_id=user["uid"], indicator="field_ndvi"
-        )
         page = self.paginate_queryset(queryset)
         if page is not None:
-            results_ = GetFieldIndicatorsSerializer(page, many=True)
+            results_ = GetWeeklyFieldIndicatorsSerializer(page, many=True)
             results_ = get_differences(results_)
-            return self.get_paginated_response(results_.data)
+            return self.get_paginated_response(results_)
         else:
-            results_ = GetFieldIndicatorsSerializer(queryset, many=True)
+            results_ = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
             results_ = get_differences(results_)
         
-        return Response(results_.data, status=status.HTTP_200_OK)
+        return Response(results_, status=status.HTTP_200_OK)
