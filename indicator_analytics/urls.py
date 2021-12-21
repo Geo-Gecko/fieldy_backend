@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from indicator_analytics.views import (
     FieldIndicatorsTopBottomViewSet, FieldIndicatorsNDVIChangeViewSet,
-    WeeklyFieldIndicatorsViewSet
+    WeeklyFieldIndicatorsViewSet, FieldIndicatorsThresholdsViewSet
 )
 
 router = DefaultRouter()
@@ -17,6 +17,9 @@ router.register(
 )
 router.register(
     'weeklyindicators', WeeklyFieldIndicatorsViewSet, basename='weeklyindicators'
+)
+router.register(
+    'fieldindicatorsthresholds', FieldIndicatorsThresholdsViewSet, basename='fieldindicatorsthresholds'
 )
 
 app_name = 'indicator_analytics'

@@ -1,4 +1,5 @@
-
+import json
+from copy import deepcopy
 from itertools import groupby, chain
 from datetime import datetime, timedelta
 
@@ -85,7 +86,7 @@ class WeeklyFieldIndicatorsViewSet(
             earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")
 
         queryset = WeeklyFieldIndicators.objects.filter(
-            user_id=user["uid"], date_observed__gt=earliest_month
+            user_id=user["uid"], date_observed__gte=earliest_month
         ).order_by("-date_observed")
 
         page = self.paginate_queryset(queryset)
@@ -149,7 +150,7 @@ class WeeklyFieldIndicatorsViewSet(
             earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")#.strftime("%Y-%m-%d")
 
         field_ndvi_obj = WeeklyFieldIndicators.objects.filter(
-            user_id=user["uid"], date_observed__gt=earliest_month, field_id=field_id
+            user_id=user["uid"], date_observed__gte=earliest_month, field_id=field_id
         ).order_by("-date_observed")
 
         serializer = GetWeeklyFieldIndicatorsSerializer(field_ndvi_obj, many=True)
@@ -296,7 +297,7 @@ class FieldIndicatorsNDVIChangeViewSet(
     )
     def list(self, request):
         """
-        Query NDVI Changes
+        Query weekly NDVI Changes
         """
         user_data, user = verify_auth_token(request)
         if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
@@ -321,7 +322,7 @@ class FieldIndicatorsNDVIChangeViewSet(
             earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")#.strftime("%Y-%m-%d")
 
         queryset = WeeklyFieldIndicators.objects.filter(
-            user_id=user["uid"], date_observed__gt=earliest_month
+            user_id=user["uid"], date_observed__gte=earliest_month
         ).order_by("-date_observed")
 
         def get_differences(results_):
@@ -357,3 +358,111 @@ class FieldIndicatorsNDVIChangeViewSet(
             results_ = get_differences(results_)
         
         return Response(results_, status=status.HTTP_200_OK)
+
+
+
+class FieldIndicatorsThresholdsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+
+    serializer_class = WeeklyFieldIndicators
+    lookup_field = 'field_id'
+    permission_classes = (AllowAny,)
+    pagination_class = IndicatorResultsSetPagination
+
+    @swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter(
+            'indicator', openapi.IN_QUERY,
+            description="indicator type to retrieve", type=openapi.TYPE_STRING, default="field_ndvi"
+        ),
+        openapi.Parameter(
+            'earliest_month', openapi.IN_QUERY, description="earliest month for retrieval", type=openapi.TYPE_STRING, default="previous month"
+        ),
+        openapi.Parameter(
+            'below', openapi.IN_QUERY,
+            description="Retrieve fields for which indicator is below this value",
+            type=openapi.TYPE_NUMBER, default=json.dumps({
+                "field_ndvi": 0.2, "field_precipitation": 3, "field_ndwi": 0, "field_temperature": 15
+            })
+        ),
+        openapi.Parameter(
+            'above', openapi.IN_QUERY,
+            description="Retrieve fields for which indicator is above this value",
+            type=openapi.TYPE_NUMBER, default=json.dumps({
+                "field_ndvi": None, "field_precipitation": None, "field_ndwi": 0.3, "field_temperature": 35
+            })
+        ),
+    ],
+    responses={status.HTTP_200_OK: GetWeeklyFieldIndicatorsSerializer(many=True)},
+    )
+    def list(self, request):
+        """
+        Query weekly field indicators using thresholds
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
+
+        kator_thresholds = {
+            "field_ndvi": [0.2, None], "field_precipitation": [3, None],
+            "field_ndwi": [0, 0.3], "field_temperature": [15, 35]
+        }
+
+        indicator = request.query_params.get("indicator", "field_ndvi")
+        below = request.query_params.get("below", kator_thresholds[indicator][0])
+        above = request.query_params.get("above", kator_thresholds[indicator][1])
+
+        precip_sub = deepcopy(available_indicators)
+        precip_sub[0] = "field_precipitation"
+        if indicator not in precip_sub:
+             return Response(
+                {"Error": f"Available indicators are: {precip_sub}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            if (above and float(above) > 1000) or float(below) < -1000:
+                return Response(
+                    {"Error": f"Issue with below and above values: {below}, {above}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ValueError as e:
+             return Response(
+                {"Error": "Below and above values should be integers"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        earliest_month = datetime.now() - timedelta(days=42)
+        earliest_month = earliest_month.strftime("%B").lower()
+        earliest_month = request.query_params.get("earliest_month", earliest_month)
+        if earliest_month not in MONTHS_:
+            return Response(
+                {"Error": f"Month passed should be among: {MONTHS_}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        year = datetime.now().year if MONTHS_.index(earliest_month)+1 - datetime.now().month < 0 else (datetime.now() - timedelta(days=366)).year
+        earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")
+
+        # https://stackoverflow.com/a/11442041 ** translates k:v to k=v
+        query_dict_ = {f"{indicator}__lt": below}
+        if above:
+            query_dict_[f"{indicator}__gt"] = above
+        queryset = WeeklyFieldIndicators.objects.filter(
+            user_id=user["uid"], date_observed__gte=earliest_month, **query_dict_
+        ).order_by(f"-date_observed")
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = GetWeeklyFieldIndicatorsSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+# TODO: aUto delete old_data
