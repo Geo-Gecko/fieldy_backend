@@ -19,6 +19,10 @@ from layers.models import ArrayedFieldIndicators
 from layers.views.polygon_views import verify_auth_token
 from layers.views.indicator_views import IndicatorResultsSetPagination
 
+from .models import WeeklyFieldIndicators
+from .serializers import (
+    WeeklyFieldIndicatorsSerializer, GetWeeklyFieldIndicatorsSerializer
+)
 
 MONTHS_ = [
     'january', 'february', 'march', 'april', 'may', 'june',
@@ -28,6 +32,153 @@ available_indicators = [
             "field_rainfall", "field_ndvi", "field_ndwi",
             "field_temperature", "field_evapotranspiration"
         ]
+
+
+class WeeklyFieldIndicatorsViewSet(
+    viewsets.GenericViewSet, mixins.ListModelMixin
+):
+
+    serializer_class = WeeklyFieldIndicatorsSerializer
+    lookup_field = 'field_id'
+    permission_classes = (AllowAny,)
+    pagination_class = IndicatorResultsSetPagination
+
+
+    @swagger_auto_schema(
+    manual_parameters=[
+        openapi.Parameter(
+            'earliest_month', openapi.IN_QUERY, default="previous month",
+            description="furthest month back to be retrieved", type=openapi.TYPE_STRING,
+        )
+    ],
+    responses={status.HTTP_200_OK: GetWeeklyFieldIndicatorsSerializer(many=True)},
+    )
+    def list(self, request):
+        """
+        To list all the weekly indicators for all the fields
+        ---
+        produces:
+            - application/json
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "":
+            user["uid"] = user["memberOf"]
+
+        earliest_month = datetime.now() - timedelta(days=42)
+        earliest_month = earliest_month.strftime("%B").lower()
+        earliest_month = request.query_params.get("earliest_month", earliest_month)
+        if earliest_month not in MONTHS_:
+            return Response(
+                {"Error": f"Month passed should be among: {MONTHS_}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if type(earliest_month) == str:
+            # TODO: This line below is iffy. now is november...earliest is feb...calculate
+            year = datetime.now().year if MONTHS_.index(earliest_month)+1 - datetime.now().month < 0 else (datetime.now() - timedelta(days=366)).year
+            earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")
+
+        queryset = WeeklyFieldIndicators.objects.filter(
+            user_id=user["uid"], date_observed__gt=earliest_month
+        ).order_by("-date_observed")
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = GetWeeklyFieldIndicatorsSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(auto_schema=None)
+    def create(self, request, field_id=None):
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "" or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer_data['user_id'] = user["uid"]
+        serializer = self.serializer_class(data=serializer_data)
+
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, field_id=None):
+        """
+        To list all the indicators for a particular field
+        ---
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+            - code: 200
+              message: OK
+
+        produces:
+            - application/json
+        """
+        user_data, user = verify_auth_token(request)
+        if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if user["memberOf"] != "" or user["paymentLevels"] != "SECOND LEVEL":
+            user["uid"] = user["memberOf"]
+
+        earliest_month = datetime.now() - timedelta(days=42)
+        earliest_month = earliest_month.strftime("%B").lower()
+        earliest_month = request.query_params.get("earliest_month", earliest_month)
+        if earliest_month not in MONTHS_:
+            return Response(
+                {"Error": f"Month passed should be among: {MONTHS_}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        if type(earliest_month) == str:
+            year = datetime.now().year if MONTHS_.index(earliest_month)+1 - datetime.now().month < 0 else (datetime.now() - timedelta(days=366)).year
+            earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")#.strftime("%Y-%m-%d")
+
+        field_ndvi_obj = WeeklyFieldIndicators.objects.filter(
+            user_id=user["uid"], date_observed__gt=earliest_month, field_id=field_id
+        ).order_by("-date_observed")
+
+        serializer = GetWeeklyFieldIndicatorsSerializer(field_ndvi_obj, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, field_id=None):
+        serializer_data, user = verify_auth_token(request)
+        if not serializer_data or user["memberOf"] != "" or user["paymentLevels"] != "SECOND LEVEL":
+            return Response(
+                {"Error": "Unauthorized request"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # check this line in the previous view
+        serializer_data['user_id'] = user["uid"]
+        try:
+            field_ndvi_obj = WeeklyFieldIndicators.objects.get(
+                user_id=user["uid"], field_id=field_id
+            )
+            serializer = self.serializer_class(field_ndvi_obj, data=request.data)
+            # serializer.is_valid(raise_exception=True)
+            # serializer.save()
+        except WeeklyFieldIndicators.DoesNotExist:
+            serializer_data['user_id'] = user["uid"]
+            serializer = self.serializer_class(data=serializer_data)
+            # serializer.is_valid(raise_exception=True)
+            # serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class FieldIndicatorsTopBottomViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin
