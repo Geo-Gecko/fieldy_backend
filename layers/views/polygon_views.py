@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets, pagination
@@ -17,6 +18,10 @@ def verify_auth_token(request):
         token = token.split(" ")[1]
         try:
             user_ = jwt.decode(token, os.environ.get("SECRET_KEY", ""), algorithms="HS256")
+            issued_date = datetime.fromtimestamp(user_['iat'])
+            if datetime.now() - issued_date > timedelta(days=7):
+                return False, ""
+            # TODO: This next try-catch smells
             try:
                 return request.data, user_
             except KeyError:
