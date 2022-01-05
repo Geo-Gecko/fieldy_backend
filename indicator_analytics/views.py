@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from drf_yasg import openapi
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.permissions import AllowAny
 from rest_framework import (
@@ -35,6 +36,31 @@ available_indicators = [
             "field_temperature", "field_evapotranspiration"
         ]
 
+
+@swagger_auto_schema(method="delete", auto_schema=None)
+@api_view(['DELETE'])
+def monthly_delete(request):
+    user_data, user = verify_auth_token(request)
+    if user_data != {} or user["memberOf"] != "" or user["paymentLevels"] != "SECOND LEVEL":
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    old_date = datetime.now() - timedelta(days=365)
+    old_data = WeeklyFieldIndicators.objects.filter(
+        date_observed__lte=old_date
+    ).order_by("date_observed")
+    if len(old_data):
+        for data_ in old_data:
+            data_.soft_delete()
+
+        deleted_date1, deleted_date2 = old_data[0].date_observed, old_data[len(old_data) - 1].date_observed
+        deleted_date1, deleted_date2 = deleted_date1.strftime("%d-%m-%Y"), deleted_date2.strftime("%d-%m-%Y")
+        return Response(
+            {"message": f"Weekly data has been softly deleted. Dates captured are: {deleted_date1, deleted_date2}"},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    return Response({"message": "No existing data for deletion"}, status=status.HTTP_200_OK)
 
 class WeeklyFieldIndicatorsViewSet(
     viewsets.GenericViewSet, mixins.ListModelMixin
