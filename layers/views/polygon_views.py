@@ -35,8 +35,8 @@ def verify_auth_token(request):
 
 
 class PolygonResultsSetPagination(pagination.LimitOffsetPagination):
-    default_limit = 2000
-    max_limit = 2000
+    default_limit = 10000
+    max_limit = 10000
 
 
 class ListCreatePolygonLayer(generics.ListCreateAPIView):
