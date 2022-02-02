@@ -1,3 +1,6 @@
+from django.db.models.manager import Manager
+from django.db.utils import Error
+from indicator_analytics.managers import SoftDeleteManager
 from django.db import models
 
 
@@ -20,3 +23,18 @@ class WeeklyFieldIndicators(models.Model):
     field_precipitation = models.FloatField(blank=True, null=True)
     field_temperature = models.FloatField(blank=True, null=True)
     field_evapotranspiration = models.FloatField(blank=True, null=True)
+    deleted = models.BooleanField(default=False)
+
+    objects = SoftDeleteManager() # https://www.youtube.com/watch?v=nlZHpGPkfbQ
+    all_objects = Manager()
+
+    def restore(self):
+        self.deleted = False
+        self.save()
+
+    def soft_delete(self):
+        self.deleted = True
+        self.save()
+
+    def delete(self):
+        raise Error()
