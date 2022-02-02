@@ -11,16 +11,16 @@ from indicator_analytics.views import (
 router = DefaultRouter()
 
 router.register(
-    "fieldindicatorstopbottom", FieldIndicatorsTopBottomViewSet, basename="fieldindicatorstopbottom"
+    "field-indicators-top-bottom", FieldIndicatorsTopBottomViewSet, basename="field-indicators-top-bottom"
 )
 router.register(
-    "ndvichange", FieldIndicatorsNDVIChangeViewSet, basename="ndvichange"
+    "ndvi-change", FieldIndicatorsNDVIChangeViewSet, basename="ndvi-change"
 )
 router.register(
-    'weeklyindicators', WeeklyFieldIndicatorsViewSet, basename='weeklyindicators'
+    'weekly-indicators', WeeklyFieldIndicatorsViewSet, basename='weekly-indicators'
 )
 router.register(
-    'fieldindicatorsthresholds', FieldIndicatorsThresholdsViewSet, basename='fieldindicatorsthresholds'
+    'field-indicator-thresholds', FieldIndicatorsThresholdsViewSet, basename='field-indicator-thresholds'
 )
 
 app_name = 'indicator_analytics'

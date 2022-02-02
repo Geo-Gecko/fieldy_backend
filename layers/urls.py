@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from layers.views.contact_views import contact_us
 from layers.views.polygon_views import (
-    ListCreatePolygonLayer, ListCreateUpdateDestroyGridLayer
+    ListCreatePolygonLayer, ListCreateUpdateDestroyGridLayer, get_fields
 )
 from layers.views.indicator_views import (
     FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
@@ -13,25 +13,27 @@ from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
 
 router = DefaultRouter()
 router.register(
-    "afsisdata", AFSISIndicatorsViewSet, basename="afsisdata"
+    "afsis-data", AFSISIndicatorsViewSet, basename="afsis-data"
 )
 router.register(
-    "fieldindicators", FieldIndicatorsViewSet, basename="fieldindicators"
+    "field-indicators", FieldIndicatorsViewSet, basename="field-indicators"
 )
 router.register(
-    "indicatorcalculations", FieldIndicatorCalculationsViewSet, basename="indicatorcalculations"
+    "indicator-calculations", FieldIndicatorCalculationsViewSet, basename="indicator-calculations"
 )
 router.register(
-    "gridlayers", ListCreateUpdateDestroyGridLayer, basename="gridlayers"
+    "grid-layers", ListCreateUpdateDestroyGridLayer, basename="grid-layers"
 )
 router.register(
-    "forecastindicators", GetForeCastIndicatorsViewSet, basename="forecastindicators"
+    "forecast-indicators", GetForeCastIndicatorsViewSet, basename="forecast-indicators"
 )
 
 app_name = 'layers'
 
 urlpatterns = [
     # path('contact/', contact_us),
+    path('fields/', get_fields),
+    path('fields/<str:field_id>/', get_fields),
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
     path(
         'getupdatedeletelayer/<str:field_id>/',
