@@ -32,7 +32,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     url('^$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('admin/', admin.site.urls),
-    path('layers/', include('layers.urls', namespace='layers-urls')),
-    path('indicatoranalytics/', include('indicator_analytics.urls', namespace='indicator_analytics-urls')),
-    path('users/', include('users.urls'))
+    path('v1/layers/', include('layers.urls', namespace='layers-urls')),
+    path('v1/indicator-analytics/', include('indicator_analytics.urls', namespace='indicator_analytics-urls')),
+    path('v1/users/', include('users.urls'))
 ]

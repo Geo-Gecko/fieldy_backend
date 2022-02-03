@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status, viewsets, pagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 import jwt
 
 from layers.models import PolygonJsonLayer, GridJsonLayer
@@ -33,10 +34,51 @@ def verify_auth_token(request):
     return False, ""
 
 
-
 class PolygonResultsSetPagination(pagination.LimitOffsetPagination):
     default_limit = 10000
     max_limit = 10000
+
+
+@api_view(['GET'])
+def get_fields(request, field_id=None):
+    """Return all fields or one. The latter can be specified by appending field_id
+
+    Args:
+        request (GET): A list of fields
+
+    Returns:
+        [200]: An object or list of fields
+    """
+    user_data, user = verify_auth_token(request)
+    if user_data != {}:
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+
+    if field_id:
+        try:
+            queryset = PolygonJsonLayer.objects.get(field_id=field_id)
+            serializer = PolygonLayerSerializer(queryset)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except PolygonJsonLayer.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    else:
+        queryset = PolygonJsonLayer.objects.all()
+        paginator = PolygonResultsSetPagination()
+
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = PolygonLayerSerializer(page, many=True)
+        else:
+            serializer = PolygonLayerSerializer(queryset, many=True)
+
+        if page is not None:
+            return paginator.get_paginated_response(serializer.data)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ListCreatePolygonLayer(generics.ListCreateAPIView):
