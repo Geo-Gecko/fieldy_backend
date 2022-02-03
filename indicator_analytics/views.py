@@ -13,6 +13,9 @@ from rest_framework import (
     viewsets,
     mixins
 )
+from rest_framework.decorators import api_view
+import requests
+
 
 from layers.serializers import (
     FieldIndicatorsSerializer,
@@ -491,4 +494,61 @@ class FieldIndicatorsThresholdsViewSet(
             serializer = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 # TODO: aUto delete old_data
+@api_view(['GET'])
+def get_wider_area(request):
+    # user_data, user = verify_auth_token(request)
+    # if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+    #     return Response(
+    #         {"Error": "Unauthorized request"},
+    #         status=status.HTTP_403_FORBIDDEN
+    #     )
+
+    # if user["memberOf"] != "":
+    #     user["uid"] = user["memberOf"]
+    
+    #to be generated from user_auth
+    client_auth = ('fieldy_client', '')
+    
+    params = request.data.keys()
+
+
+    headers = {'Content-Type': 'application/json'}
+    #Data Link
+    get_data_url = 'http://geogecko.gis-cdn.net/geoserver/fieldy_data/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=fieldy_data:' #nigeria_HT_grid&outputFormat=application%2Fjson'
+    
+    
+    #First Generate List of AOI.
+    #For each area/maybe when selected set the client_aoi
+    client_aoi = 'kenya_HT_grid'
+
+    #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
+    r = requests.get(get_data_url + client_aoi + '&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
+    wider_area_data = r.content
+    
+    
+    #The thresholds would apply when the data has been filtered on the platform and then the download button clicked.
+    #Or if not prefiltered the default is no filter applied bu tthe user may specify which values they want to remove anyways via modal.
+
+    #filterRequestCapability add '&cql_filter=slope%3E40'
+
+
+
+    filters = ['slope', 'elevation', 'lc', 'fcc']
+    
+    filter_query = '&cql_filter='
+    for filter in filters:
+        filter_query += filter + '>10 and '
+
+    size = len(filter_query)
+    filtered_request_url = get_data_url + client_aoi + filter_query[:size - 4] + '&outputFormat=application%2Fjson'
+    filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
+
+    filtered_data = filtered_r.content
+
+    # print(filtered_data)
+
+
+    return Response(filtered_data, status=status.HTTP_200_OK)
