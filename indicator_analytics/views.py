@@ -497,7 +497,7 @@ class FieldIndicatorsThresholdsViewSet(
 
 
 # TODO: aUto delete old_data
-@api_view(['GET'])
+@api_view(['POST'])
 def get_wider_area(request):
     # user_data, user = verify_auth_token(request)
     # if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
@@ -524,31 +524,50 @@ def get_wider_area(request):
     #For each area/maybe when selected set the client_aoi
     client_aoi = 'kenya_HT_grid'
 
-    #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
-    r = requests.get(get_data_url + client_aoi + '&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
-    wider_area_data = r.content
-    
-    
     #The thresholds would apply when the data has been filtered on the platform and then the download button clicked.
     #Or if not prefiltered the default is no filter applied bu tthe user may specify which values they want to remove anyways via modal.
 
     #filterRequestCapability add '&cql_filter=slope%3E40'
 
 
+    # fcc = fertility capability classification | lc - land cover
+    filters_ = ['slope', 'elevation', 'land cover', 'fertility capability classification']
 
-    filters = ['slope', 'elevation', 'lc', 'fcc']
-    
-    filter_query = '&cql_filter='
-    for filter in filters:
-        filter_query += filter + '>10 and '
+    if request.data.keys():
+        param_filters = request.data.keys()
+        for key_ in param_filters:
+            if key_ not in filters_:
+                return Response(
+                    {"Error": f"Available filters are {filters_}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        param_values = chain.from_iterable(request.data.values())
+        if not all(isinstance(val_, int) for val_ in param_values):
+            return Response(
+                {"Error": f"Ensure values are used for all filters"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not all(val_ <= 9700 or val_ > 0 for val_ in param_values):
+            return Response(
+                {"Error": "Maximum available value is 9700 for fertility-capability-classification. Min value is 0 for all"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        filter_query = '&cql_filter='
+        for key_, val_ in request.data.items():
+            if key_ == "land cover" or key_ == "fertility capability classification":
+                key_ = "".join([x[0] for x in key_.split(" ")])
+            query_ = f"{key_} between {val_[0]} and {val_[1]} and "
+            filter_query += query_
+        # remove last " and "
+        filter_query = filter_query[:-5]
+        
+        filtered_request_url = f"{get_data_url}{client_aoi}{filter_query}&outputFormat=application%2Fjson"
+        filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
+        filtered_data = filtered_r.content
+        return Response(filtered_data, status=status.HTTP_200_OK)
 
-    size = len(filter_query)
-    filtered_request_url = get_data_url + client_aoi + filter_query[:size - 4] + '&outputFormat=application%2Fjson'
-    filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
-
-    filtered_data = filtered_r.content
-
-    # print(filtered_data)
-
-
-    return Response(filtered_data, status=status.HTTP_200_OK)
+    #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
+    r = requests.get(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
+    wider_area_data = r.content
+    return Response(wider_area_data, status=status.HTTP_200_OK)
