@@ -511,10 +511,8 @@ def get_wider_area(request):
     
     #to be generated from user_auth
     client_auth = ('fieldy_client', '')
-    
-    params = request.data.keys()
 
-
+    params = request.data.keys()    
     headers = {'Content-Type': 'application/json'}
     #Data Link
     get_data_url = 'http://geogecko.gis-cdn.net/geoserver/fieldy_data/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=fieldy_data:' #nigeria_HT_grid&outputFormat=application%2Fjson'
@@ -523,11 +521,18 @@ def get_wider_area(request):
     #First Generate List of AOI.
     #For each area/maybe when selected set the client_aoi
     client_aoi = 'kenya_HT_grid'
+    client_aoi_summary = 'kenya_Grid_Summary'
 
     #The thresholds would apply when the data has been filtered on the platform and then the download button clicked.
     #Or if not prefiltered the default is no filter applied bu tthe user may specify which values they want to remove anyways via modal.
 
     #filterRequestCapability add '&cql_filter=slope%3E40'
+
+    summary_request_url = f"{get_data_url}{client_aoi_summary}&outputFormat=application%2Fjson"
+    summary_r = requests.post(summary_request_url, headers=headers, auth=client_auth)
+    summary = json.loads(summary_r.content)["features"][0]['properties'] 
+
+    print(summary)
 
 
     # fcc = fertility capability classification | lc - land cover
@@ -561,13 +566,13 @@ def get_wider_area(request):
             filter_query += query_
         # remove last " and "
         filter_query = filter_query[:-5]
-        
+
         filtered_request_url = f"{get_data_url}{client_aoi}{filter_query}&outputFormat=application%2Fjson"
-        filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
+        filtered_r = requests.post(filtered_request_url, headers=headers, auth=client_auth)
         filtered_data = filtered_r.content
         return Response(filtered_data, status=status.HTTP_200_OK)
 
     #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
-    r = requests.get(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
+    r = requests.post(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
     wider_area_data = r.content
     return Response(wider_area_data, status=status.HTTP_200_OK)
