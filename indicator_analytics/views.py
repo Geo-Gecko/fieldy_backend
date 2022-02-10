@@ -14,6 +14,7 @@ from rest_framework import (
     viewsets,
     mixins
 )
+from rest_framework import serializers
 from rest_framework.decorators import api_view
 import requests
 
@@ -499,8 +500,37 @@ class FieldIndicatorsThresholdsViewSet(
 # TODO: aUto delete old_data
 
 
+
+@swagger_auto_schema(
+    method="post",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["slope", "elevation", "land cover", "fertility capability classification"],
+        properties={
+            'slope': openapi.Schema(
+                description="[min max] values of slope filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'elevation': openapi.Schema(
+                description="[min, max] values for elevation filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'land cover': openapi.Schema(
+                description="[min, max] values for land cover filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'fertility capability classification': openapi.Schema(
+                description="[min, max] values for fertility capability classification filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+        }
+    ),
+    responses={status.HTTP_200_OK: serializers.Serializer({"Bounds": {}, "Grid": {"FeatureCollection": "..."}})},
+)
 @api_view(['POST'])
 def wider_area(request):
+    """Get all or fitlered wider area.
+    """
     user_data, user = verify_auth_token(request)
     if user["paymentLevels"] != "SECOND LEVEL" or user["memberOf"] != "61164207eaef91000adcfeab":
         return Response(
