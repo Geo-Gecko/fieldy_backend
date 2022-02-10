@@ -1,3 +1,4 @@
+import os
 import json
 from copy import deepcopy
 from itertools import groupby, chain
@@ -495,29 +496,30 @@ class FieldIndicatorsThresholdsViewSet(
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
 # TODO: aUto delete old_data
+
+
 @api_view(['POST'])
-def get_wider_area(request):
-    # user_data, user = verify_auth_token(request)
-    # if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
-    #     return Response(
-    #         {"Error": "Unauthorized request"},
-    #         status=status.HTTP_403_FORBIDDEN
-    #     )
+def wider_area(request):
+    user_data, user = verify_auth_token(request)
+    if user["paymentLevels"] != "SECOND LEVEL" or user["memberOf"] != "61164207eaef91000adcfeab":
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
-    # if user["memberOf"] != "":
-    #     user["uid"] = user["memberOf"]
-    
-    #to be generated from user_auth
-    client_auth = ('fieldy_client', '')
+    # NOTE: To be used for storing creds, the memberOf id I mean
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
 
-    params = request.data.keys()    
+    #TODO: to be generated from user_auth
+    client_auth = (os.getenv("GEOSERVER_NAME", ""), os.getenv("GEOSERVER_PASSWORD", ""))
+
     headers = {'Content-Type': 'application/json'}
     #Data Link
     get_data_url = 'http://geogecko.gis-cdn.net/geoserver/fieldy_data/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=fieldy_data:' #nigeria_HT_grid&outputFormat=application%2Fjson'
-    
-    
+
+
     #First Generate List of AOI.
     #For each area/maybe when selected set the client_aoi
     client_aoi = 'kenya_HT_grid'
@@ -529,11 +531,12 @@ def get_wider_area(request):
     #filterRequestCapability add '&cql_filter=slope%3E40'
 
     summary_request_url = f"{get_data_url}{client_aoi_summary}&outputFormat=application%2Fjson"
-    summary_r = requests.post(summary_request_url, headers=headers, auth=client_auth)
-    summary = json.loads(summary_r.content)["features"][0]['properties'] 
-
-    print(summary)
-
+    summary_r = requests.get(summary_request_url, headers=headers, auth=client_auth)
+    if summary_r.status_code == 200:
+        summary_r = summary_r.json()
+        summary_r = summary_r["features"][0]['properties']
+    else:
+        return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # fcc = fertility capability classification | lc - land cover
     filters_ = ['slope', 'elevation', 'land cover', 'fertility capability classification']
@@ -557,7 +560,7 @@ def get_wider_area(request):
                 {"Error": "Maximum available value is 9700 for fertility-capability-classification. Min value is 0 for all"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         filter_query = '&cql_filter='
         for key_, val_ in request.data.items():
             if key_ == "land cover" or key_ == "fertility capability classification":
@@ -568,11 +571,17 @@ def get_wider_area(request):
         filter_query = filter_query[:-5]
 
         filtered_request_url = f"{get_data_url}{client_aoi}{filter_query}&outputFormat=application%2Fjson"
-        filtered_r = requests.post(filtered_request_url, headers=headers, auth=client_auth)
-        filtered_data = filtered_r.content
-        return Response(filtered_data, status=status.HTTP_200_OK)
+        filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
+        if filtered_r.status_code == 200:
+            filtered_data = filtered_r.json()
+            return Response(
+                {"Bounds": summary_r, "Grid": filtered_data}, status=status.HTTP_200_OK
+            )
+        return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
-    r = requests.post(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
-    wider_area_data = r.content
-    return Response(wider_area_data, status=status.HTTP_200_OK)
+    response = requests.get(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
+    if response.status_code == 200:
+        wider_area_data = response.json()
+        return Response({"Bounds": summary_r, "Grid": wider_area_data}, status=status.HTTP_200_OK)
+    return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
