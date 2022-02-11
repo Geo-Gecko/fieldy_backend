@@ -547,7 +547,7 @@ def wider_area(request):
 
     headers = {'Content-Type': 'application/json'}
     #Data Link
-    get_data_url = 'http://geogecko.gis-cdn.net/geoserver/fieldy_data/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=fieldy_data:' #nigeria_HT_grid&outputFormat=application%2Fjson'
+    get_data_url = os.getenv("GEOSERVER_URL", "") #nigeria_HT_grid&outputFormat=application%2Fjson'
 
 
     #First Generate List of AOI.
