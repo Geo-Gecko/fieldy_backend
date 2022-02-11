@@ -1,3 +1,4 @@
+import os
 import json
 from copy import deepcopy
 from itertools import groupby, chain
@@ -13,6 +14,10 @@ from rest_framework import (
     viewsets,
     mixins
 )
+from rest_framework import serializers
+from rest_framework.decorators import api_view
+import requests
+
 
 from layers.serializers import (
     FieldIndicatorsSerializer,
@@ -491,4 +496,122 @@ class FieldIndicatorsThresholdsViewSet(
             serializer = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 # TODO: aUto delete old_data
+
+
+
+@swagger_auto_schema(
+    method="post",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["slope", "elevation", "land cover", "fertility capability classification"],
+        properties={
+            'slope': openapi.Schema(
+                description="[min max] values of slope filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'elevation': openapi.Schema(
+                description="[min, max] values for elevation filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'land cover': openapi.Schema(
+                description="[min, max] values for land cover filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+            'fertility capability classification': openapi.Schema(
+                description="[min, max] values for fertility capability classification filter",
+                type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)
+            ),
+        }
+    ),
+    responses={status.HTTP_200_OK: serializers.Serializer({"Bounds": {}, "Grid": {"FeatureCollection": "..."}})},
+)
+@api_view(['POST'])
+def wider_area(request):
+    """Get all or fitlered wider area.
+    """
+    user_data, user = verify_auth_token(request)
+    if user["paymentLevels"] != "SECOND LEVEL" or user["memberOf"] != "61164207eaef91000adcfeab":
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # NOTE: To be used for storing creds, the memberOf id I mean
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+
+    #TODO: to be generated from user_auth
+    client_auth = (os.getenv("GEOSERVER_NAME", ""), os.getenv("GEOSERVER_PASSWORD", ""))
+
+    headers = {'Content-Type': 'application/json'}
+    #Data Link
+    get_data_url = os.getenv("GEOSERVER_URL", "") #nigeria_HT_grid&outputFormat=application%2Fjson'
+
+
+    #First Generate List of AOI.
+    #For each area/maybe when selected set the client_aoi
+    client_aoi = 'kenya_HT_grid'
+    client_aoi_summary = 'kenya_Grid_Summary'
+
+    #The thresholds would apply when the data has been filtered on the platform and then the download button clicked.
+    #Or if not prefiltered the default is no filter applied bu tthe user may specify which values they want to remove anyways via modal.
+
+    #filterRequestCapability add '&cql_filter=slope%3E40'
+
+    summary_request_url = f"{get_data_url}{client_aoi_summary}&outputFormat=application%2Fjson"
+    summary_r = requests.get(summary_request_url, headers=headers, auth=client_auth)
+    if summary_r.status_code == 200:
+        summary_r = summary_r.json()
+        summary_r = summary_r["features"][0]['properties']
+    else:
+        return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # fcc = fertility capability classification | lc - land cover
+    filters_ = ['slope', 'elevation', 'land cover', 'fertility capability classification']
+
+    if request.data.keys():
+        param_filters = request.data.keys()
+        for key_ in param_filters:
+            if key_ not in filters_:
+                return Response(
+                    {"Error": f"Available filters are {filters_}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        param_values = chain.from_iterable(request.data.values())
+        if not all(isinstance(val_, int) for val_ in param_values):
+            return Response(
+                {"Error": f"Ensure values are used for all filters"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not all(val_ <= 9700 or val_ > 0 for val_ in param_values):
+            return Response(
+                {"Error": "Maximum available value is 9700 for fertility-capability-classification. Min value is 0 for all"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        filter_query = '&cql_filter='
+        for key_, val_ in request.data.items():
+            if key_ == "land cover" or key_ == "fertility capability classification":
+                key_ = "".join([x[0] for x in key_.split(" ")])
+            query_ = f"{key_} between {val_[0]} and {val_[1]} and "
+            filter_query += query_
+        # remove last " and "
+        filter_query = filter_query[:-5]
+
+        filtered_request_url = f"{get_data_url}{client_aoi}{filter_query}&outputFormat=application%2Fjson"
+        filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
+        if filtered_r.status_code == 200:
+            filtered_data = filtered_r.json()
+            return Response(
+                {"Bounds": summary_r, "Grid": filtered_data}, status=status.HTTP_200_OK
+            )
+        return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    #Can be heavy result, but can load a tiff of the file, rather than the geojson, much lighter. slightly interactible.
+    response = requests.get(f'{get_data_url}{client_aoi}&outputFormat=application%2Fjson', headers = headers, auth=client_auth)
+    if response.status_code == 200:
+        wider_area_data = response.json()
+        return Response({"Bounds": summary_r, "Grid": wider_area_data}, status=status.HTTP_200_OK)
+    return Response({"Error": "Issue with third-party server"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
