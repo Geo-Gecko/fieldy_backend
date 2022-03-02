@@ -1,8 +1,9 @@
 import os
 import json
 from copy import deepcopy
+from calendar import monthrange
 from itertools import groupby, chain
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from drf_yasg import openapi
 from rest_framework.response import Response
@@ -37,7 +38,7 @@ MONTHS_ = [
     'july', 'august', 'september', 'october', 'november', 'december'
 ]
 available_indicators = [
-            "field_rainfall", "field_ndvi", "field_ndwi",
+            "field_precipitation", "field_ndvi", "field_ndwi",
             "field_temperature", "field_evapotranspiration"
         ]
 
@@ -229,7 +230,11 @@ class FieldIndicatorsTopBottomViewSet(
             description="indicator type to retrieve", type=openapi.TYPE_STRING, default="field_rainfall"
         ),
         openapi.Parameter(
-            'month', openapi.IN_QUERY, description="month for retrieval", type=openapi.TYPE_STRING, default="previous month"
+            'month', openapi.IN_QUERY, description="month up to which data is retrieved", type=openapi.TYPE_INTEGER, default="previous month"
+        ),
+        openapi.Parameter(
+            'week', openapi.IN_QUERY, description="week in the month up to which data is retrieved",
+            type=openapi.TYPE_STRING, default="last week of the previous month - 4"
         ),
         openapi.Parameter(
             'position', openapi.IN_QUERY, description="top or bottom results to retrieve", type=openapi.TYPE_STRING, default="top"
@@ -255,18 +260,40 @@ class FieldIndicatorsTopBottomViewSet(
         if user["memberOf"] != "":
             user["uid"] = user["memberOf"]
 
-        previous_month = datetime.now() - timedelta(days=30)
+        previous_month = datetime.now() - timedelta(days=31)
         previous_month = previous_month.strftime("%B").lower()
         indicator = request.query_params.get("indicator", "field_rainfall")
         month_ = request.query_params.get("month", previous_month)
+        try:
+            week_ = int(request.query_params.get("week", 4))
+        except ValueError:
+             return Response(
+                {"Error": "Week value should be an integer from 1 to 4"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         position = request.query_params.get("position", "top")
         percentage = request.query_params.get("percentage", 15)
 
+        if not isinstance(week_, int) or week_ > 4 or week_ < 0:
+             return Response(
+                {"Error": "Week value should be an integer from 1 to 4"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         if month_ not in MONTHS_:
              return Response(
                 {"Error": "Month provided should be of lower case, like: january"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        year_ = datetime.now().year if MONTHS_.index(month_)+1 - datetime.now().month < 0\
+            else (datetime.now() - timedelta(days=366)).year
+        
+        month_ = MONTHS_.index(month_) + 1
+        # monthrange is because some months are 30,31,28. 
+        # Also, subtracting the previous 31 days is so we can add on the weeks specified
+        date_ = date(
+            year_, month_, monthrange(year_, month_)[1]
+        ) - timedelta(days=31) + timedelta(weeks=week_)
+
         if position not in ["top", "bottom"]:
              return Response(
                 {"Error": "Position should be either top or bottom"},
@@ -289,21 +316,25 @@ class FieldIndicatorsTopBottomViewSet(
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        queryset = ArrayedFieldIndicators.objects.filter(
-            user_id=user["uid"], indicator=indicator
-        ).order_by(f"-{month_}")
+        queryset = WeeklyFieldIndicators.objects.filter(
+            user_id=user["uid"], date_observed__gte=date_
+        ).order_by("date_observed", f"-{indicator}")
+
+        group_qset = [list(v) for k,v in groupby(queryset, lambda row: row.date_observed)]
 
         if position == "top":
-            queryset = queryset[:round(len(queryset) * int(percentage)/100)]
+            group_qset = [grp[:round(len(grp) * int(percentage)/100)] for grp in group_qset]
+            queryset = list(chain.from_iterable(group_qset))
         elif position == "bottom":
-            queryset = queryset[len(queryset) - round(len(queryset) * int(percentage)/100):]
+            group_qset = [grp[len(grp) - round(len(grp) * int(percentage)/100):] for grp in group_qset]
+            queryset = list(chain.from_iterable(group_qset))
 
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = GetFieldIndicatorsSerializer(page, many=True)
+            serializer = GetWeeklyFieldIndicatorsSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = GetFieldIndicatorsSerializer(queryset, many=True)
+            serializer = GetWeeklyFieldIndicatorsSerializer(queryset, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -475,8 +506,9 @@ class FieldIndicatorsThresholdsViewSet(
         if earliest_month not in MONTHS_:
             return Response(
                 {"Error": f"Month passed should be among: {MONTHS_}"},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_400_BAD_REQUEST
             )
+        # Add +1 because datetime.now().month count is from 1
         year = datetime.now().year if MONTHS_.index(earliest_month)+1 - datetime.now().month < 0 else (datetime.now() - timedelta(days=366)).year
         earliest_month = datetime.strptime(f"{earliest_month.capitalize()}/{year}", "%B/%Y")
 
