@@ -66,7 +66,7 @@ def get_fields(request, field_id=None):
         except PolygonJsonLayer.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
     else:
-        queryset = PolygonJsonLayer.objects.all()
+        queryset = PolygonJsonLayer.objects.filter(user_id=user["uid"])
         paginator = PolygonResultsSetPagination()
 
         page = paginator.paginate_queryset(queryset, request)
