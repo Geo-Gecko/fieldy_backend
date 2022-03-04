@@ -563,8 +563,8 @@ class FieldIndicatorsThresholdsViewSet(
 def wider_area(request):
     """Get all or fitlered wider area.
     """
-    user_data, user = verify_auth_token(request)
-    if user["paymentLevels"] != "SECOND LEVEL" or user["memberOf"] != "61164207eaef91000adcfeab":
+    serializer_data, user = verify_auth_token(request)
+    if not serializer_data or user["paymentLevels"] != "SECOND LEVEL" or user["memberOf"] != "61164207eaef91000adcfeab":
         return Response(
             {"Error": "Unauthorized request"},
             status=status.HTTP_403_FORBIDDEN
@@ -633,6 +633,7 @@ def wider_area(request):
         filter_query = filter_query[:-5]
 
         filtered_request_url = f"{get_data_url}{client_aoi}{filter_query}&outputFormat=application%2Fjson"
+
         filtered_r = requests.get(filtered_request_url, headers=headers, auth=client_auth)
         if filtered_r.status_code == 200:
             filtered_data = filtered_r.json()
