@@ -1,7 +1,10 @@
 import os
 from datetime import datetime, timedelta
 
+from django.db.models import Count
+from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from rest_framework import generics, status, viewsets, pagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -79,6 +82,62 @@ def get_fields(request, field_id=None):
             return paginator.get_paginated_response(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_fields_in_grid_cell(request, grid_id):
+    """Return all fields in a grid cell
+
+    Args:
+        request (GET): All fields in a grid cell
+
+    Returns:
+        [200]: List of fields
+    """
+    user_data, user = verify_auth_token(request)
+    if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+
+    try:
+        queryset = PolygonJsonLayer.objects.filter(properties__gridId=grid_id)
+        serializer = PolygonLayerSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except PolygonJsonLayer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+@api_view(['GET'])
+def get_croptypes(request):
+    """Return all croptypes for a user_id
+
+    Args:
+        request (GET): All croptypes for a user_id
+
+    Returns:
+        [200]: List dictionaries of croptypes
+    """
+    user_data, user = verify_auth_token(request)
+    if user_data != {}:
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+
+    try:
+        results_ = PolygonJsonLayer.objects.filter(user_id=user["uid"]).annotate(
+            CropType=KeyTextTransform("CropType", "properties")
+        ).values("CropType").annotate(fieldCount=Count("CropType"))
+        return Response(results_, status=status.HTTP_200_OK)
+    except PolygonJsonLayer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class ListCreatePolygonLayer(generics.ListCreateAPIView):

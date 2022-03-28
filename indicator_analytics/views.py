@@ -54,7 +54,7 @@ def monthly_delete(request):
         )
     old_date = datetime.now() - timedelta(days=365)
     old_data = WeeklyFieldIndicators.objects.filter(
-        date_observed__lte=old_date
+        date_observed__lte=old_date, user_id=user["uid"]
     ).order_by("date_observed")
     if len(old_data):
         for data_ in old_data:

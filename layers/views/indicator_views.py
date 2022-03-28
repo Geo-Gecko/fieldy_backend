@@ -9,12 +9,13 @@ from rest_framework import (
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from drf_yasg.utils import swagger_auto_schema
 
 from layers.views.polygon_views import verify_auth_token
 from layers.models import (
     FieldIndicatorCalculations, ArrayedFieldIndicators,
-    ForeCastIndicators, AFSISIndicators
+    ForeCastIndicators, AFSISIndicators, PolygonJsonLayer
 )
 from layers.serializers import (
     FieldIndicatorsSerializer, FieldIndicatorCalculationsSerializer,
@@ -28,6 +29,39 @@ class IndicatorResultsSetPagination(pagination.LimitOffsetPagination):
     default_limit = 50000
     max_limit = 50000
 
+
+
+@api_view(['GET'])
+def get_fieldindicators_for_fields_in_grid_cell(request, grid_id):
+    """Return all indicators fields in a grid cell
+
+    Args:
+        request (GET): All indicators for fields in a grid cell
+
+    Returns:
+        [200]: List of indicators for fields in grid cell
+    """
+    user_data, user = verify_auth_token(request)
+    if user_data != {}:
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+
+    try:
+        fields_queryset = PolygonJsonLayer.objects.filter(properties__gridId=grid_id)
+        try:
+            queryset = ArrayedFieldIndicators.objects.filter(
+                field_id__in=(row.field_id for row in fields_queryset)
+            )
+            serializer = GetFieldIndicatorsSerializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ArrayedFieldIndicators.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+    except PolygonJsonLayer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class AFSISIndicatorsViewSet(

@@ -2,11 +2,13 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from layers.views.contact_views import contact_us
 from layers.views.polygon_views import (
-    ListCreatePolygonLayer, ListCreateUpdateDestroyGridLayer, get_fields
+    ListCreatePolygonLayer, get_fields_in_grid_cell,
+    ListCreateUpdateDestroyGridLayer, get_fields, get_croptypes
 )
 from layers.views.indicator_views import (
     FieldIndicatorsViewSet, FieldIndicatorCalculationsViewSet,
-    GetForeCastIndicatorsViewSet, AFSISIndicatorsViewSet
+    GetForeCastIndicatorsViewSet, AFSISIndicatorsViewSet,
+    get_fieldindicators_for_fields_in_grid_cell
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
@@ -33,7 +35,10 @@ app_name = 'layers'
 urlpatterns = [
     # path('contact/', contact_us),
     path('fields/', get_fields),
+    path('croptypes/', get_croptypes),
     path('fields/<str:field_id>/', get_fields),
+    path('field-in-grid-cell/<str:grid_id>/', get_fields_in_grid_cell),
+    path('kators-in-grid-cell/<str:grid_id>/', get_fieldindicators_for_fields_in_grid_cell),
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
     path(
         'getupdatedeletelayer/<str:field_id>/',
