@@ -13,13 +13,10 @@ from layers.views.polygon_views import verify_auth_token
 
 @api_view(['GET'])
 def get_last_visit_summaries(request, month_=1):
-    """Return all croptypes for a user_id
-
-    Args:
-        request (GET): All croptypes for a user_id
+    """Return last visits less or equal to a month
 
     Returns:
-        [200]: List dictionaries of croptypes
+        [200]: List date-visited-field-count dictionaries
     """
     user_data, user = verify_auth_token(request)
     if user_data != {}:
