@@ -12,6 +12,7 @@ from layers.views.indicator_views import (
 )
 from layers.views.polygon_views import RetrieveUpdateDestroyPolygonLayer
 from layers.views.user_detail_views import RetrieveCreateUpdateUserDetail
+from layers.views.one_acre_views import get_last_visit_summaries
 
 router = DefaultRouter()
 router.register(
@@ -39,6 +40,10 @@ urlpatterns = [
     path('fields/<str:field_id>/', get_fields),
     path('field-in-grid-cell/<str:grid_id>/', get_fields_in_grid_cell),
     path('kators-in-grid-cell/<str:grid_id>/', get_fieldindicators_for_fields_in_grid_cell),
+
+    # one-acre-fund urls
+    path('last-visit-summary/<int:month_>/', get_last_visit_summaries),
+
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
     path(
         'getupdatedeletelayer/<str:field_id>/',
