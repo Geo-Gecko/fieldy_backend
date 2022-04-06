@@ -43,7 +43,7 @@ urlpatterns = [
 
     # one-acre-fund urls
     path('last-visit-summary/<int:month_>/', get_last_visit_summaries),
-    path('status-summary/<str:status_>/', get_status_summaries),
+    path('status-summary/', get_status_summaries),
 
     path('listcreatepolygonlayer/', ListCreatePolygonLayer.as_view()),
     path(

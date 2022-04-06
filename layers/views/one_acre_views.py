@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 from django.db.models import Count
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
@@ -49,16 +48,17 @@ def get_last_visit_summaries(request, month_=1):
                 datetime.now() - datetime.strptime(row_["LastVisit"], '%Y-%m-%d')
             ).days // 31 <= month_, results_
         ))
+        results_.sort(key=lambda row_: row_["LastVisit"])
         return Response(results_, status=status.HTTP_200_OK)
     except PolygonJsonLayer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def get_status_summaries(request, status_="Currently"):
-    """Return last visits less or equal to a month
+    """Return ownership status of one acre fund fields
 
     Returns:
-        [200]: List date-visited-field-count dictionaries
+        [200]: Dictionary of counts per status
     """
     user_data, user = verify_auth_token(request)
     if user_data != {}:
@@ -75,11 +75,6 @@ def get_status_summaries(request, status_="Currently"):
             {"Error": "This data is not available for this account"},
             status=status.HTTP_403_FORBIDDEN
         )
-    # if status_ > 12:
-    #     return Response(
-    #         {"Error": "Max and min available months are 0 and 12"},
-    #         status=status.HTTP_403_FORBIDDEN
-    #     )
 
     try:
         results_ = PolygonJsonLayer.objects.filter(user_id=user["uid"]).annotate(
