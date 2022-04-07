@@ -45,9 +45,41 @@ def get_last_visit_summaries(request, month_=1):
         ).values("LastVisit").annotate(fieldCount=Count("LastVisit"))
         results_ = list(filter(
             lambda row_: (
-                datetime.now() - datetime.strptime(row_["LastVisit"], '%Y-%M-%d')
+                datetime.now() - datetime.strptime(row_["LastVisit"], '%Y-%m-%d')
             ).days // 31 <= month_, results_
         ))
+        results_.sort(key=lambda row_: row_["LastVisit"])
+        return Response(results_, status=status.HTTP_200_OK)
+    except PolygonJsonLayer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_status_summaries(request, status_="Currently"):
+    """Return ownership status of one acre fund fields
+
+    Returns:
+        [200]: Dictionary of counts per status
+    """
+    user_data, user = verify_auth_token(request)
+    if user_data != {}:
+        return Response(
+            {"Error": "Unauthorized request"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    if user["memberOf"] != "":
+        user["uid"] = user["memberOf"]
+    
+    if user["uid"] != "623731215344c1000aae2459":
+        return Response(
+            {"Error": "This data is not available for this account"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        results_ = PolygonJsonLayer.objects.filter(user_id=user["uid"]).annotate(
+            OAFStatus=KeyTextTransform("OAFStatus", "properties")
+        ).values("OAFStatus").annotate(fieldCount=Count("OAFStatus"))
         return Response(results_, status=status.HTTP_200_OK)
     except PolygonJsonLayer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)

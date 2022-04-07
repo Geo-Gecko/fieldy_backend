@@ -95,7 +95,7 @@ def get_fields_in_grid_cell(request, grid_id):
         [200]: List of fields
     """
     user_data, user = verify_auth_token(request)
-    if user_data != {} or user["paymentLevels"] != "SECOND LEVEL":
+    if user_data != {}:
         return Response(
             {"Error": "Unauthorized request"},
             status=status.HTTP_403_FORBIDDEN
