@@ -392,8 +392,14 @@ class FieldIndicatorsNDVIChangeViewSet(
             list_results = list(results_.data)
             # groupby needs the sorting
             list_results.sort(key=lambda x: x["field_id"])
-            for k,g in groupby(list_results, key=lambda x: x["field_id"]):
-                group_fids.append(list(g))
+            [group_fids.append(list(g)) for k, g in groupby(list_results, key=lambda x: x["field_id"])]
+
+            # account for None values to enable subtraction without Type error
+            for group_ in group_fids:
+                for row_ in group_:
+                    if not row_["field_ndvi"]:
+                        row_["field_ndvi"] = 0
+
             for field_data in group_fids:
                 for i, row_ in enumerate(field_data):
                     try:
@@ -405,6 +411,7 @@ class FieldIndicatorsNDVIChangeViewSet(
                                 del row_["field_precipitation"]
                         del row_['date_observed']
                     except IndexError:
+                        # going beyond field_data length
                         continue
                 # exclude last element in the group since it wasn't subtracted from anything
             results_ = list(chain.from_iterable([el[:len(el) - 1] for el in group_fids]))
