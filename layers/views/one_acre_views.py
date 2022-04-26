@@ -80,6 +80,18 @@ def get_status_summaries(request, status_="Currently"):
         results_ = PolygonJsonLayer.objects.filter(user_id=user["uid"]).annotate(
             OAFStatus=KeyTextTransform("OAFStatus", "properties")
         ).values("OAFStatus").annotate(fieldCount=Count("OAFStatus"))
-        return Response(results_, status=status.HTTP_200_OK)
+
+        prop_results = PolygonJsonLayer.objects.filter(user_id=user["uid"]).values("properties")
+        prop_results = list(filter(lambda row_: (row_["properties"]["OAFStatus"] == status_), prop_results))
+        reduced = []
+        area = 0
+        for row_ in prop_results:
+            reduced.append(row_["properties"]["gridId"])
+            area += row_["properties"]["area"]
+        res = {}
+        for i in reduced:
+            res[i] = reduced.count(i)
+        
+        return Response([results_, res, area], status=status.HTTP_200_OK)
     except PolygonJsonLayer.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
