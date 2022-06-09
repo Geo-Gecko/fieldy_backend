@@ -23,8 +23,10 @@ def verify_auth_token(request):
         try:
             user_ = jwt.decode(token, os.environ.get("SECRET_KEY", ""), algorithms="HS256")
             issued_date = datetime.fromtimestamp(user_['iat'])
-            if datetime.now() - issued_date > timedelta(days=7):
-                return False, ""
+            if (user_["memberOf"] == "" and user_["uid"] != os.environ.get("CLIENT_ID", "")) \
+                or user_["memberOf"] != os.environ.get("CLIENT_ID", ""):
+                if datetime.now() - issued_date > timedelta(days=7):
+                    return False, ""
             # TODO: This next try-catch smells
             try:
                 return request.data, user_
